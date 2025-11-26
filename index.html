@@ -1,39 +1,231 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Painel de Férias — App Profissional (HVS)</title>
+<meta charset="UTF-8">
+<title>Painel de Férias - Dashboard Profissional</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  :root{
-    --bg:#071026; --card:#0f1a2a; --muted:#9fb0c3; --accent:#06b6d4;
-    --accent2:#7c3aed; --ok:#16a34a; --warn:#f59e0b; --err:#ef4444;
-    font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%; margin:0; background: linear-gradient(180deg,#071026 0%,#031021 100%); color:#e6eef6;}
-  .app{max-width:1100px;margin:0 auto;padding:14px}
-  header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-  h1{margin:0;font-size:18px}
-  .subtitle{color:var(--muted);font-size:13px;margin-top:6px}
-  .controls{display:flex;gap:8px;align-items:center}
-  input,button,select,textarea{font-size:14px}
-  button{padding:8px 12px;border-radius:10px;border:0;cursor:pointer}
-  .btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#021224;font-weight:700}
-  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);border-radius:10px;padding:8px 10px}
-  .layout{display:grid;grid-template-columns:1fr;gap:14px;margin-top:12px}
-  @media(min-width:980px){ .layout{grid-template-columns:380px 1fr} }
-  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 30px rgba(2,6,23,0.6)}
-  label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
-  .input{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef6}
-  .months-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
-  @media(min-width:980px){ .months-wrap{grid-template-columns:repeat(3,1fr)} }
-  .month-chip{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;gap:8px}
-  .month-chip .name{font-weight:700}
-  .month-chip .meta{font-size:13px;color:var(--muted)}
-  .month-chip.selected{background:linear-gradient(90deg, rgba(6,182,212,0.12), rgba(124,58,237,0.06));border:1px solid rgba(6,182,212,0.16)}
-  .month-chip.full{opacity:0.6;border:1px dashed rgba(239,68,68,0.12);background:rgba(239,68,68,0.03)}
-  .pref-badge{min-width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;background:rgba(255,255,255,0.02);color:var(--muted)}
+    body { font-family: Arial, sans-serif; margin: 0; background:#f4f6f9; }
+    header { background:#1a73e8; padding:15px; color:white; text-align:center; font-size:22px; font-weight:bold; }
+
+    .container { padding: 20px; }
+
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+
+    .card {
+        background:white;
+        border-radius:10px;
+        padding:15px;
+        box-shadow:0 3px 6px rgba(0,0,0,0.1);
+        transition:0.3s;
+    }
+
+    .card.full { border:2px solid red; }
+
+    .card:hover { transform: scale(1.02); }
+
+    .month-title { font-size:18px; font-weight:bold; margin-bottom:8px; }
+
+    .limit { font-size:14px; margin-bottom:8px; }
+
+    .full-text { color:red; font-weight:bold; }
+
+    .user-list { font-size:14px; margin-top:10px; }
+
+    .user-list div { background:#e9eef6; padding:5px; margin-bottom:5px; border-radius:5px; }
+
+    .form-box {
+        background:white;
+        margin-top:20px;
+        padding:20px;
+        border-radius:10px;
+        box-shadow:0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    input, select, button { width:100%; padding:12px; font-size:16px; margin-top:10px; border-radius:8px; border:1px solid #ccc; }
+
+    button { background:#1a73e8; color:white; font-weight:bold; cursor:pointer; }
+    button:hover { background:#155ec2; }
+
+    .admin-section { margin-top:30px; padding:20px; background:white; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+
+    table { width:100%; border-collapse:collapse; margin-top:20px; }
+    th, td { border:1px solid #ccc; padding:10px; text-align:left; }
+    th { background:#1a73e8; color:white; }
+</style>
+</head>
+<body>
+
+<header>Painel de Férias - Dashboard Profissional</header>
+
+<div class="container">
+
+    <div id="dashboard" class="card-grid"></div>
+
+    <div class="form-box">
+        <h3>Registrar Escolha de Férias</h3>
+        <input type="text" id="nome" placeholder="Nome completo" required>
+        <input type="number" id="cpf" placeholder="CPF (somente números)" required>
+
+        <label>Escolha 3 meses:</label>
+        <div id="mesSelect"></div>
+
+        <button onclick="registrar()">Enviar</button>
+        <p id="msg"></p>
+    </div>
+
+    <div class="admin-section">
+        <h3>Acesso ADM</h3>
+        <input type="password" id="admSenha" placeholder="Senha do administrador">
+        <button onclick="loginAdm()">Entrar</button>
+
+        <div id="admPanel" style="display:none;">
+            <h3>Painel Administrativo</h3>
+            <button onclick="resetarTudo()" style="background:red;">Resetar Tudo</button>
+            <button onclick="exportarCSV()" style="background:green; margin-top:10px;">Exportar CSV</button>
+
+            <div id="tabelaADM"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SENHA_ADM = "lig@457812#";
+let dados = JSON.parse(localStorage.getItem("feriasDashboard") || "{}");
+
+const meses = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+];
+
+function atualizarDashboard() {
+    let dash = document.getElementById("dashboard");
+    dash.innerHTML = "";
+
+    meses.forEach((mes, index) => {
+        let inscritos = Object.values(dados).filter(x => x.meses.includes(index)).map(x => x.nome);
+        let full = inscritos.length >= 3;
+
+        dash.innerHTML += `
+            <div class="card ${full ? 'full' : ''}">
+                <div class="month-title">${mes}</div>
+                <div class="limit">${inscritos.length}/3 vagas ${full ? '<span class=full-text>(LOTADO)</span>' : ''}</div>
+                <div class="user-list">
+                    ${inscritos.map(n => `<div>${n}</div>`).join('')}
+                </div>
+            </div>
+        `;
+    });
+}
+
+function montarMesesForm() {
+    let box = document.getElementById("mesSelect");
+    box.innerHTML = "";
+
+    meses.forEach((mes, i) => {
+        let inscritos = Object.values(dados).filter(x => x.meses.includes(i));
+        let disabled = inscritos.length >= 3 ? "disabled" : "";
+
+        box.innerHTML += `
+            <label><input type="checkbox" value="${i}" class="mesCheck" ${disabled}> ${mes}</label><br>
+        `;
+    });
+}
+
+function registrar() {
+    const nome = document.getElementById("nome").value.trim();
+    const cpf = document.getElementById("cpf").value.trim();
+    const msg = document.getElementById("msg");
+
+    if (!nome || !cpf) {
+        msg.innerHTML = "⚠ Preencha nome e CPF";
+        return;
+    }
+    
+    if (dados[cpf]) {
+        msg.innerHTML = "⚠ Este CPF já registrou férias";
+        return;
+    }
+
+    let escolhidos = [...document.querySelectorAll('.mesCheck:checked')].map(x => Number(x.value));
+
+    if (escolhidos.length !== 3) {
+        msg.innerHTML = "⚠ Escolha exatamente 3 meses";
+        return;
+    }
+
+    dados[cpf] = { nome, cpf, meses: escolhidos };
+    localStorage.setItem("feriasDashboard", JSON.stringify(dados));
+
+    msg.innerHTML = "✔ Registrado com sucesso!";
+
+    atualizarDashboard();
+    montarMesesForm();
+}
+
+function loginAdm() {
+    const senha = document.getElementById("admSenha").value;
+    if (senha === SENHA_ADM) {
+        document.getElementById("admPanel").style.display = "block";
+        gerarTabelaADM();
+    } else {
+        alert("Senha incorreta!");
+    }
+}
+
+function gerarTabelaADM() {
+    let html = `<table><tr><th>Nome</th><th>CPF</th><th>Meses</th></tr>`;
+    for (let cpf in dados) {
+        html += `<tr>
+            <td>${dados[cpf].nome}</td>
+            <td>${cpf}</td>
+            <td>${dados[cpf].meses.map(x => meses[x]).join(', ')}</td>
+        </tr>`;
+    }
+    html += `</table>`;
+
+    document.getElementById("tabelaADM").innerHTML = html;
+}
+
+function resetarTudo() {
+    if (confirm("Tem certeza que deseja apagar TUDO?")) {
+        dados = {};
+        localStorage.setItem("feriasDashboard", JSON.stringify(dados));
+        atualizarDashboard();
+        montarMesesForm();
+        gerarTabelaADM();
+        alert("Dados resetados!");
+    }
+}
+
+function exportarCSV() {
+    let csv = "Nome,CPF,Mês1,Mês2,Mês3\n";
+
+    for (let cpf in dados) {
+        let d = dados[cpf];
+        csv += `${d.nome},${cpf},${meses[d.meses[0]]},${meses[d.meses[1]]},${meses[d.meses[2]]}\n`;
+    }
+
+    let blob = new Blob([csv], { type: "text/csv" });
+    let url = URL.createObjectURL(blob);
+
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "ferias_dashboard.csv";
+    a.click();
+}
+
+// Inicializar
+atualizarDashboard();
+montarMesesForm();
+
+</script>
+</body>
+</html>
   .pref-badge.order{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#021224}
   .months-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
   @media(min-width:980px){ .months-grid{grid-template-columns:repeat(4,1fr)} }
@@ -533,4 +725,5 @@ renderAll();
 </script>
 </body>
 </html>
+
 
