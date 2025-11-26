@@ -1,234 +1,199 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel de Seleção</title>
-
+<title>Escala de Férias – Portaria 2026</title>
 <style>
-    body {
-        margin: 0;
-        background: #f1f3f4;
-        font-family: Arial, sans-serif;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; background:#eef1f3; }
+    header { background:#1abc9c; padding:15px; color:white; text-align:center; font-size:22px; font-weight:bold; }
 
-    header {
-        background: #00b3a4;
-        padding: 18px;
-        text-align: center;
-        font-size: 23px;
-        font-weight: bold;
-        color: white;
-    }
+    .container { padding: 20px; }
 
-    .container {
-        max-width: 900px;
-        margin: auto;
-        padding: 20px;
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
     }
 
     .card {
-        background: white;
-        border-radius: 12px;
-        padding: 22px;
-        margin-bottom: 25px;
-        box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        background:#ffffff;
+        border-radius:12px;
+        padding:18px;
+        box-shadow:0 4px 10px rgba(0,0,0,0.08);
+        border-left:5px solid #1abc9c;
+        transition:0.3s;
     }
 
-    .dashboard {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 18px;
+    .card.full { border-left:5px solid #e74c3c; background:#fff5f5; }
+
+    .card:hover { transform: scale(1.02); }
+
+    .month-title { font-size:20px; font-weight:bold; color:#2c3e50; margin-bottom:8px; }
+
+    .limit { font-size:15px; margin-bottom:8px; color:#34495e; }
+
+    .full-text { color:#e74c3c; font-weight:bold; }
+
+    .user-list { font-size:14px; margin-top:10px; }
+    .user-list div { background:#dff9f3; padding:6px; margin-bottom:5px; border-radius:5px; border-left:3px solid #1abc9c; }
+
+    .form-box {
+        background:white;
+        margin-top:25px;
+        padding:22px;
+        border-radius:12px;
+        box-shadow:0 4px 10px rgba(0,0,0,0.08);
     }
 
-    .month {
-        padding: 20px;
-        background: white;
-        border-left: 8px solid #00b3a4;
-        border-radius: 12px;
-        text-align: center;
-        font-weight: bold;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    .form-box input, .form-box select {
+        width:100%;
+        padding:10px;
+        margin-bottom:12px;
+        border-radius:6px;
+        border:1px solid #ccc;
     }
 
-    .month.full {
-        border-left-color: red;
-        background: #ffe5e5;
-    }
+    .btn { background:#1abc9c; padding:10px 20px; color:white; border:none; border-radius:8px; cursor:pointer; width:100%; font-size:16px; }
+    .btn:hover { background:#159a80; }
 
-    label {
-        font-weight: bold;
-    }
-
-    input, select {
-        width: 100%;
-        padding: 14px;
-        margin-top: 8px;
-        margin-bottom: 16px;
-        font-size: 16px;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-    }
-
-    button {
-        width: 100%;
-        background: #00b3a4;
-        padding: 15px;
-        font-size: 18px;
-        border: none;
-        border-radius: 10px;
-        color: white;
-        cursor: pointer;
-        margin-top: 10px;
-    }
-
-    button:hover {
-        background: #009688;
-    }
-
-    #adminArea { display: none; }
-
+    .adm-btn { background:#34495e; margin-top:10px; }
+    .adm-btn:hover { background:#2c3e50; }
 </style>
 </head>
 <body>
-
-<header>Painel da Equipe – Seleção de Meses</header>
-
+<header>Escala de Férias – Portaria 2026</header>
 <div class="container">
 
-    <div class="card">
-        <h2 style="color:#00b3a4">📊 Dashboard – Preenchimento</h2>
-        <div id="dashboard" class="dashboard"></div>
-    </div>
+<div class="card-grid" id="meses"></div>
 
-    <div class="card">
-        <h2 style="color:#00b3a4">Cadastro</h2>
+<div class="form-box">
+    <h2>Registrar Preferência</h2>
+    <input id="nome" placeholder="Nome completo" required>
+    <input id="cpf" placeholder="CPF" required>
 
-        <label>Nome Completo *</label>
-        <input type="text" id="nome" placeholder="Digite seu nome completo">
+    <label>1ª opção</label>
+    <select id="m1"></select>
 
-        <label>CPF *</label>
-        <input type="text" id="cpf" placeholder="000.000.000-00">
+    <label>2ª opção</label>
+    <select id="m2"></select>
 
-        <label>Mês *</label>
-        <select id="mesEscolha">
-            <option value="">Selecione um mês</option>
-        </select>
+    <label>3ª opção</label>
+    <select id="m3"></select>
 
-        <button onclick="registrar()">Confirmar</button>
-    </div>
+    <button class="btn" onclick="salvar()">Enviar</button>
+    <button class="adm-btn btn" onclick="abrirADM()">Painel ADM</button>
+</div>
 
-    <div class="card">
-        <h2 style="color:#00b3a4">Administração</h2>
-        <input type="password" id="senha" placeholder="Senha de administrador">
-        <button onclick="login()">Entrar</button>
-    </div>
+<div id="admPanel" style="display:none; margin-top:20px;" class="form-box">
+    <h2>Painel ADM</h2>
+    <p>Digite a senha:</p>
+    <input type="password" id="admPass">
+    <button class="btn" onclick="validarADM()">Entrar</button>
 
-    <div id="adminArea" class="card">
-        <h2 style="color:#00b3a4">Painel do Administrador</h2>
-        <div id="lista"></div>
+    <div id="admContent" style="display:none; margin-top:20px;">
+        <h3>Remover Registro</h3>
+        <div id="admList"></div>
     </div>
 </div>
 
+</div>
+
 <script>
-const senhaAdm = "lig@457812#";
-const meses = [
-    "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
-    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
-];
+const API = "https://script.google.com/macros/s/AKfycbyF35LglhpnXZPAX-nssi5Hzz90_lsjv6fjFScHWdQgBP6mAK8vuBrgQ5kF8ChgMzzk/exec";
+const senhaADM = "lig@457812#";
 
-let registros = JSON.parse(localStorage.getItem("painelEquipe")) || {};
+const mesesNome = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
-function atualizarDashboard() {
-    const dash = document.getElementById("dashboard");
-    dash.innerHTML = "";
-
-    meses.forEach(m => {
-        const qtd = registros[m]?.length || 0;
-        const cheio = qtd >= 3;
-
-        dash.innerHTML += `
-            <div class="month ${cheio ? 'full' : ''}">
-                ${m}<br><small>${qtd}/3</small>
-            </div>
-        `;
-    });
-}
-
-function carregarSelect() {
-    const select = document.getElementById("mesEscolha");
-    select.innerHTML = '<option value="">Selecione um mês</option>';
-
-    meses.forEach(m => {
-        const qtd = registros[m]?.length || 0;
-        select.innerHTML += `
-            <option value="${m}" ${qtd>=3 ? "disabled" : ""}>${m}</option>
-        `;
-    });
-}
-
-function registrar() {
-    const nome = document.getElementById("nome").value;
-    const cpf = document.getElementById("cpf").value;
-    const mes = document.getElementById("mesEscolha").value;
-
-    if (!nome || !cpf || !mes) {
-        alert("Preencha todos os campos!");
-        return;
-    }
-
-    registros[mes] = registros[mes] || [];
-
-    if (registros[mes].length >= 3) {
-        alert("Este mês já está cheio!");
-        return;
-    }
-
-    registros[mes].push({ nome, cpf });
-    localStorage.setItem("painelEquipe", JSON.stringify(registros));
-
-    alert("Cadastro realizado!");
-    location.reload();
-}
-
-function login() {
-    const input = document.getElementById("senha").value;
-
-    if (input === senhaAdm) {
-        document.getElementById("adminArea").style.display = "block";
-        mostrarAdmin();
-    } else {
-        alert("Senha incorreta.");
-    }
-}
-
-function mostrarAdmin() {
-    const lista = document.getElementById("lista");
-    lista.innerHTML = "";
-
-    meses.forEach(m => {
-        lista.innerHTML += `<h3>${m}</h3>`;
-
-        (registros[m] || []).forEach((r, i) => {
-            lista.innerHTML += `
-                <p>${r.nome} — ${r.cpf}
-                    <button onclick="remover('${m}', ${i})">Excluir</button>
-                </p>
-            `;
+function carregarMesesSelect() {
+    ["m1","m2","m3"].forEach(id => {
+        let s = document.getElementById(id);
+        mesesNome.forEach(m => {
+            let op = document.createElement("option");
+            op.value = m;
+            op.textContent = m;
+            s.appendChild(op);
         });
     });
 }
 
-function remover(mes, index) {
-    registros[mes].splice(index,1);
-    localStorage.setItem("painelEquipe", JSON.stringify(registros));
-    mostrarAdmin();
-    atualizarDashboard();
+async function carregarDashboard() {
+    let res = await fetch(`${API}?action=read`);
+    let json = await res.json();
+
+    let dados = json.data;
+    let meses = {};
+    mesesNome.forEach(m => meses[m] = []);
+
+    dados.forEach((l,i)=>{
+        meses[l[2]]?.push(l[0]);
+        meses[l[3]]?.push(l[0]);
+        meses[l[4]]?.push(l[0]);
+    });
+
+    let area = document.getElementById("meses");
+    area.innerHTML = "";
+
+    mesesNome.forEach(m => {
+        const lista = meses[m];
+        let limit = lista.length;
+        let full = limit >= 3 ? "full" : "";
+
+        let div = document.createElement("div");
+        div.className = `card ${full}`;
+        div.innerHTML = `
+            <div class='month-title'>${m}</div>
+            <div class='limit'>${limit}/3 vagas</div>
+            <div class='user-list'>${lista.map(n => `<div>${n}</div>`).join('')}</div>
+        `;
+        area.appendChild(div);
+    });
 }
 
-atualizarDashboard();
-carregarSelect();
-</script>
+async function salvar() {
+    let nome = document.getElementById("nome").value;
+    let cpf = document.getElementById("cpf").value;
+    let m1 = document.getElementById("m1").value;
+    let m2 = document.getElementById("m2").value;
+    let m3 = document.getElementById("m3").value;
 
+    if (!nome || !cpf) return alert("Nome e CPF são obrigatórios!");
+
+    await fetch(`${API}?action=write&nome=${encodeURIComponent(nome)}&cpf=${cpf}&mes1=${m1}&mes2=${m2}&mes3=${m3}`);
+
+    alert("Registrado com sucesso!");
+    carregarDashboard();
+}
+
+function abrirADM(){ document.getElementById("admPanel").style.display="block"; }
+
+async function validarADM(){
+    let p = document.getElementById("admPass").value;
+    if(p !== senhaADM) return alert("Senha incorreta!");
+
+    document.getElementById("admContent").style.display="block";
+    let res = await fetch(`${API}?action=read`);
+    let json = await res.json();
+    let dados = json.data;
+
+    let a = document.getElementById("admList");
+    a.innerHTML = "";
+    dados.forEach((l,i)=>{
+        let div = document.createElement("div");
+        div.innerHTML = `${i+2} - ${l[0]} (${l[1]}) <button onclick='del(${i+2})'>Excluir</button>`;
+        a.appendChild(div);
+    });
+}
+
+async function del(linha){
+    await fetch(`${API}?action=delete&linha=${linha}`);
+    alert("Removido!");
+    validarADM();
+    carregarDashboard();
+}
+
+carregarMesesSelect();
+carregarDashboard();
+</script>
 </body>
 </html>
