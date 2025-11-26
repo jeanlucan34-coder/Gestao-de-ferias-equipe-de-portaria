@@ -2,38 +2,249 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel de Férias - Dashboard Profissional</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Escolha de Meses</title>
+
 <style>
-    body { font-family: Arial, sans-serif; margin: 0; background:#f4f6f9; }
-    header { background:#1a73e8; padding:15px; color:white; text-align:center; font-size:22px; font-weight:bold; }
+    body {
+        font-family: Arial, sans-serif;
+        background: #f2f5f7;
+        margin: 0;
+        padding: 0;
+    }
 
-    .container { padding: 20px; }
+    header {
+        background: #00b3a4;
+        padding: 15px;
+        color: white;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+    }
 
-    .card-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 15px;
+    .container {
+        max-width: 900px;
+        margin: auto;
+        padding: 20px;
     }
 
     .card {
-        background:white;
-        border-radius:10px;
-        padding:15px;
-        box-shadow:0 3px 6px rgba(0,0,0,0.1);
-        transition:0.3s;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
     }
 
-    .card.full { border:2px solid red; }
+    h2 {
+        color: #00b3a4;
+        margin-bottom: 10px;
+    }
 
-    .card:hover { transform: scale(1.02); }
+    label { font-weight: bold; }
 
-    .month-title { font-size:18px; font-weight:bold; margin-bottom:8px; }
+    input, select {
+        width: 100%;
+        padding: 12px;
+        margin-top: 6px;
+        margin-bottom: 14px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+    }
 
-    .limit { font-size:14px; margin-bottom:8px; }
+    button {
+        width: 100%;
+        padding: 15px;
+        background: #00b3a4;
+        color: white;
+        border: none;
+        font-size: 18px;
+        border-radius: 10px;
+        margin-top: 10px;
+        cursor: pointer;
+    }
 
-    .full-text { color:red; font-weight:bold; }
+    button:hover {
+        background: #009688;
+    }
 
+    .dashboard {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-top: 20px;
+    }
+
+    .month-box {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        font-size: 18px;
+        font-weight: bold;
+        border-left: 8px solid #00b3a4;
+    }
+
+    .month-box.full {
+        border-left: 8px solid red;
+        background: #ffe5e5;
+    }
+
+    #adminArea {
+        display: none;
+    }
+
+</style>
+</head>
+<body>
+
+<header>Painel de Seleção de Meses – Equipe</header>
+
+<div class="container">
+
+    <!-- Dashboard -->
+    <div class="card">
+        <h2>📊 Status dos Meses</h2>
+        <div id="dashboard" class="dashboard"></div>
+    </div>
+
+    <!-- Formulário -->
+    <div class="card">
+        <h2>Preencher Dados</h2>
+
+        <label>Nome Completo *</label>
+        <input type="text" id="nome" placeholder="Digite seu nome completo" required>
+
+        <label>CPF *</label>
+        <input type="text" id="cpf" placeholder="000.000.000-00" required>
+
+        <label>Escolher mês para participar *</label>
+        <select id="mesEscolhido">
+            <option value="">Selecione</option>
+        </select>
+
+        <button onclick="registrar()">Confirmar</button>
+    </div>
+
+    <!-- Login ADM -->
+    <div class="card">
+        <h2>Área Administrativa</h2>
+        <input type="password" id="senhaAdm" placeholder="Digite a senha do administrador">
+        <button onclick="loginAdm()">Entrar</button>
+    </div>
+
+    <!-- Área ADM -->
+    <div id="adminArea" class="card">
+        <h2>Gerenciar Registros</h2>
+        <div id="listaRegistros"></div>
+    </div>
+
+</div>
+
+<script>
+    const meses = [
+        "Janeiro", "Fevereiro", "Março",
+        "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro",
+        "Outubro", "Novembro", "Dezembro"
+    ];
+
+    let registros = JSON.parse(localStorage.getItem("registrosMeses")) || {};
+
+    function atualizarDashboard() {
+        const dash = document.getElementById("dashboard");
+        dash.innerHTML = "";
+
+        meses.forEach((m) => {
+            const total = registros[m]?.length || 0;
+            const cheio = total >= 3;
+
+            dash.innerHTML += `
+                <div class="month-box ${cheio ? "full" : ""}">
+                    ${m}<br>
+                    <small>${total}/3 preenchido</small>
+                </div>
+            `;
+        });
+    }
+
+    function carregarSelect() {
+        const select = document.getElementById("mesEscolhido");
+        meses.forEach((m) => {
+            const total = registros[m]?.length || 0;
+            select.innerHTML += `<option value="${m}" ${total >= 3 ? "disabled" : ""}>${m}</option>`;
+        });
+    }
+
+    function registrar() {
+        const nome = document.getElementById("nome").value;
+        const cpf = document.getElementById("cpf").value;
+        const mes = document.getElementById("mesEscolhido").value;
+
+        if (!nome || !cpf || !mes) {
+            alert("Preencha todos os campos obrigatórios.");
+            return;
+        }
+
+        registros[mes] = registros[mes] || [];
+
+        if (registros[mes].length >= 3) {
+            alert("Este mês está cheio!");
+            return;
+        }
+
+        registros[mes].push({ nome, cpf });
+
+        localStorage.setItem("registrosMeses", JSON.stringify(registros));
+
+        alert("Registrado com sucesso!");
+        location.reload();
+    }
+
+    function loginAdm() {
+        const senha = document.getElementById("senhaAdm").value;
+        if (senha === "lig@457812#") {
+            document.getElementById("adminArea").style.display = "block";
+            mostrarRegistros();
+        } else {
+            alert("Senha incorreta!");
+        }
+    }
+
+    function mostrarRegistros() {
+        const area = document.getElementById("listaRegistros");
+        area.innerHTML = "";
+
+        meses.forEach((m) => {
+            const lista = registros[m] || [];
+
+            area.innerHTML += `<h3>${m}</h3>`;
+
+            lista.forEach((p, i) => {
+                area.innerHTML += `
+                    <p>${p.nome} — ${p.cpf}
+                        <button onclick="remover('${m}', ${i})">Excluir</button>
+                    </p>
+                `;
+            });
+        });
+    }
+
+    function remover(mes, index) {
+        registros[mes].splice(index, 1);
+        localStorage.setItem("registrosMeses", JSON.stringify(registros));
+        mostrarRegistros();
+        atualizarDashboard();
+    }
+
+    atualizarDashboard();
+    carregarSelect();
+</script>
+
+</body>
+</html>
     .user-list { font-size:14px; margin-top:10px; }
 
     .user-list div { background:#e9eef6; padding:5px; margin-bottom:5px; border-radius:5px; }
@@ -725,5 +936,6 @@ renderAll();
 </script>
 </body>
 </html>
+
 
 
