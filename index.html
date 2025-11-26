@@ -3,23 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel de Escolha de Meses</title>
+<title>Painel de Seleção</title>
 
 <style>
     body {
-        font-family: Arial, sans-serif;
-        background: #f2f5f7;
         margin: 0;
-        padding: 0;
+        background: #f1f3f4;
+        font-family: Arial, sans-serif;
     }
 
     header {
         background: #00b3a4;
-        padding: 15px;
-        color: white;
+        padding: 18px;
         text-align: center;
-        font-size: 22px;
+        font-size: 23px;
         font-weight: bold;
+        color: white;
     }
 
     .container {
@@ -30,912 +29,206 @@
 
     .card {
         background: white;
-        padding: 20px;
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        padding: 22px;
         margin-bottom: 25px;
-    }
-
-    h2 {
-        color: #00b3a4;
-        margin-bottom: 10px;
-    }
-
-    label { font-weight: bold; }
-
-    input, select {
-        width: 100%;
-        padding: 12px;
-        margin-top: 6px;
-        margin-bottom: 14px;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        font-size: 16px;
-    }
-
-    button {
-        width: 100%;
-        padding: 15px;
-        background: #00b3a4;
-        color: white;
-        border: none;
-        font-size: 18px;
-        border-radius: 10px;
-        margin-top: 10px;
-        cursor: pointer;
-    }
-
-    button:hover {
-        background: #009688;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.08);
     }
 
     .dashboard {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 18px;
-        margin-top: 20px;
     }
 
-    .month-box {
-        background: white;
-        border-radius: 12px;
+    .month {
         padding: 20px;
-        text-align: center;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-        font-size: 18px;
-        font-weight: bold;
+        background: white;
         border-left: 8px solid #00b3a4;
+        border-radius: 12px;
+        text-align: center;
+        font-weight: bold;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     }
 
-    .month-box.full {
-        border-left: 8px solid red;
+    .month.full {
+        border-left-color: red;
         background: #ffe5e5;
     }
 
-    #adminArea {
-        display: none;
+    label {
+        font-weight: bold;
     }
+
+    input, select {
+        width: 100%;
+        padding: 14px;
+        margin-top: 8px;
+        margin-bottom: 16px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+    }
+
+    button {
+        width: 100%;
+        background: #00b3a4;
+        padding: 15px;
+        font-size: 18px;
+        border: none;
+        border-radius: 10px;
+        color: white;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background: #009688;
+    }
+
+    #adminArea { display: none; }
 
 </style>
 </head>
 <body>
 
-<header>Painel de Seleção de Meses – Equipe</header>
+<header>Painel da Equipe – Seleção de Meses</header>
 
 <div class="container">
 
-    <!-- Dashboard -->
     <div class="card">
-        <h2>📊 Status dos Meses</h2>
+        <h2 style="color:#00b3a4">📊 Dashboard – Preenchimento</h2>
         <div id="dashboard" class="dashboard"></div>
     </div>
 
-    <!-- Formulário -->
     <div class="card">
-        <h2>Preencher Dados</h2>
+        <h2 style="color:#00b3a4">Cadastro</h2>
 
         <label>Nome Completo *</label>
-        <input type="text" id="nome" placeholder="Digite seu nome completo" required>
+        <input type="text" id="nome" placeholder="Digite seu nome completo">
 
         <label>CPF *</label>
-        <input type="text" id="cpf" placeholder="000.000.000-00" required>
+        <input type="text" id="cpf" placeholder="000.000.000-00">
 
-        <label>Escolher mês para participar *</label>
-        <select id="mesEscolhido">
-            <option value="">Selecione</option>
+        <label>Mês *</label>
+        <select id="mesEscolha">
+            <option value="">Selecione um mês</option>
         </select>
 
         <button onclick="registrar()">Confirmar</button>
     </div>
 
-    <!-- Login ADM -->
     <div class="card">
-        <h2>Área Administrativa</h2>
-        <input type="password" id="senhaAdm" placeholder="Digite a senha do administrador">
-        <button onclick="loginAdm()">Entrar</button>
+        <h2 style="color:#00b3a4">Administração</h2>
+        <input type="password" id="senha" placeholder="Senha de administrador">
+        <button onclick="login()">Entrar</button>
     </div>
 
-    <!-- Área ADM -->
     <div id="adminArea" class="card">
-        <h2>Gerenciar Registros</h2>
-        <div id="listaRegistros"></div>
-    </div>
-
-</div>
-
-<script>
-    const meses = [
-        "Janeiro", "Fevereiro", "Março",
-        "Abril", "Maio", "Junho",
-        "Julho", "Agosto", "Setembro",
-        "Outubro", "Novembro", "Dezembro"
-    ];
-
-    let registros = JSON.parse(localStorage.getItem("registrosMeses")) || {};
-
-    function atualizarDashboard() {
-        const dash = document.getElementById("dashboard");
-        dash.innerHTML = "";
-
-        meses.forEach((m) => {
-            const total = registros[m]?.length || 0;
-            const cheio = total >= 3;
-
-            dash.innerHTML += `
-                <div class="month-box ${cheio ? "full" : ""}">
-                    ${m}<br>
-                    <small>${total}/3 preenchido</small>
-                </div>
-            `;
-        });
-    }
-
-    function carregarSelect() {
-        const select = document.getElementById("mesEscolhido");
-        meses.forEach((m) => {
-            const total = registros[m]?.length || 0;
-            select.innerHTML += `<option value="${m}" ${total >= 3 ? "disabled" : ""}>${m}</option>`;
-        });
-    }
-
-    function registrar() {
-        const nome = document.getElementById("nome").value;
-        const cpf = document.getElementById("cpf").value;
-        const mes = document.getElementById("mesEscolhido").value;
-
-        if (!nome || !cpf || !mes) {
-            alert("Preencha todos os campos obrigatórios.");
-            return;
-        }
-
-        registros[mes] = registros[mes] || [];
-
-        if (registros[mes].length >= 3) {
-            alert("Este mês está cheio!");
-            return;
-        }
-
-        registros[mes].push({ nome, cpf });
-
-        localStorage.setItem("registrosMeses", JSON.stringify(registros));
-
-        alert("Registrado com sucesso!");
-        location.reload();
-    }
-
-    function loginAdm() {
-        const senha = document.getElementById("senhaAdm").value;
-        if (senha === "lig@457812#") {
-            document.getElementById("adminArea").style.display = "block";
-            mostrarRegistros();
-        } else {
-            alert("Senha incorreta!");
-        }
-    }
-
-    function mostrarRegistros() {
-        const area = document.getElementById("listaRegistros");
-        area.innerHTML = "";
-
-        meses.forEach((m) => {
-            const lista = registros[m] || [];
-
-            area.innerHTML += `<h3>${m}</h3>`;
-
-            lista.forEach((p, i) => {
-                area.innerHTML += `
-                    <p>${p.nome} — ${p.cpf}
-                        <button onclick="remover('${m}', ${i})">Excluir</button>
-                    </p>
-                `;
-            });
-        });
-    }
-
-    function remover(mes, index) {
-        registros[mes].splice(index, 1);
-        localStorage.setItem("registrosMeses", JSON.stringify(registros));
-        mostrarRegistros();
-        atualizarDashboard();
-    }
-
-    atualizarDashboard();
-    carregarSelect();
-</script>
-
-</body>
-</html>
-    .user-list { font-size:14px; margin-top:10px; }
-
-    .user-list div { background:#e9eef6; padding:5px; margin-bottom:5px; border-radius:5px; }
-
-    .form-box {
-        background:white;
-        margin-top:20px;
-        padding:20px;
-        border-radius:10px;
-        box-shadow:0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    input, select, button { width:100%; padding:12px; font-size:16px; margin-top:10px; border-radius:8px; border:1px solid #ccc; }
-
-    button { background:#1a73e8; color:white; font-weight:bold; cursor:pointer; }
-    button:hover { background:#155ec2; }
-
-    .admin-section { margin-top:30px; padding:20px; background:white; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
-
-    table { width:100%; border-collapse:collapse; margin-top:20px; }
-    th, td { border:1px solid #ccc; padding:10px; text-align:left; }
-    th { background:#1a73e8; color:white; }
-</style>
-</head>
-<body>
-
-<header>Painel de Férias - Dashboard Profissional</header>
-
-<div class="container">
-
-    <div id="dashboard" class="card-grid"></div>
-
-    <div class="form-box">
-        <h3>Registrar Escolha de Férias</h3>
-        <input type="text" id="nome" placeholder="Nome completo" required>
-        <input type="number" id="cpf" placeholder="CPF (somente números)" required>
-
-        <label>Escolha 3 meses:</label>
-        <div id="mesSelect"></div>
-
-        <button onclick="registrar()">Enviar</button>
-        <p id="msg"></p>
-    </div>
-
-    <div class="admin-section">
-        <h3>Acesso ADM</h3>
-        <input type="password" id="admSenha" placeholder="Senha do administrador">
-        <button onclick="loginAdm()">Entrar</button>
-
-        <div id="admPanel" style="display:none;">
-            <h3>Painel Administrativo</h3>
-            <button onclick="resetarTudo()" style="background:red;">Resetar Tudo</button>
-            <button onclick="exportarCSV()" style="background:green; margin-top:10px;">Exportar CSV</button>
-
-            <div id="tabelaADM"></div>
-        </div>
+        <h2 style="color:#00b3a4">Painel do Administrador</h2>
+        <div id="lista"></div>
     </div>
 </div>
 
 <script>
-const SENHA_ADM = "lig@457812#";
-let dados = JSON.parse(localStorage.getItem("feriasDashboard") || "{}");
-
+const senhaAdm = "lig@457812#";
 const meses = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
 ];
 
+let registros = JSON.parse(localStorage.getItem("painelEquipe")) || {};
+
 function atualizarDashboard() {
-    let dash = document.getElementById("dashboard");
+    const dash = document.getElementById("dashboard");
     dash.innerHTML = "";
 
-    meses.forEach((mes, index) => {
-        let inscritos = Object.values(dados).filter(x => x.meses.includes(index)).map(x => x.nome);
-        let full = inscritos.length >= 3;
+    meses.forEach(m => {
+        const qtd = registros[m]?.length || 0;
+        const cheio = qtd >= 3;
 
         dash.innerHTML += `
-            <div class="card ${full ? 'full' : ''}">
-                <div class="month-title">${mes}</div>
-                <div class="limit">${inscritos.length}/3 vagas ${full ? '<span class=full-text>(LOTADO)</span>' : ''}</div>
-                <div class="user-list">
-                    ${inscritos.map(n => `<div>${n}</div>`).join('')}
-                </div>
+            <div class="month ${cheio ? 'full' : ''}">
+                ${m}<br><small>${qtd}/3</small>
             </div>
         `;
     });
 }
 
-function montarMesesForm() {
-    let box = document.getElementById("mesSelect");
-    box.innerHTML = "";
+function carregarSelect() {
+    const select = document.getElementById("mesEscolha");
+    select.innerHTML = '<option value="">Selecione um mês</option>';
 
-    meses.forEach((mes, i) => {
-        let inscritos = Object.values(dados).filter(x => x.meses.includes(i));
-        let disabled = inscritos.length >= 3 ? "disabled" : "";
-
-        box.innerHTML += `
-            <label><input type="checkbox" value="${i}" class="mesCheck" ${disabled}> ${mes}</label><br>
+    meses.forEach(m => {
+        const qtd = registros[m]?.length || 0;
+        select.innerHTML += `
+            <option value="${m}" ${qtd>=3 ? "disabled" : ""}>${m}</option>
         `;
     });
 }
 
 function registrar() {
-    const nome = document.getElementById("nome").value.trim();
-    const cpf = document.getElementById("cpf").value.trim();
-    const msg = document.getElementById("msg");
+    const nome = document.getElementById("nome").value;
+    const cpf = document.getElementById("cpf").value;
+    const mes = document.getElementById("mesEscolha").value;
 
-    if (!nome || !cpf) {
-        msg.innerHTML = "⚠ Preencha nome e CPF";
-        return;
-    }
-    
-    if (dados[cpf]) {
-        msg.innerHTML = "⚠ Este CPF já registrou férias";
+    if (!nome || !cpf || !mes) {
+        alert("Preencha todos os campos!");
         return;
     }
 
-    let escolhidos = [...document.querySelectorAll('.mesCheck:checked')].map(x => Number(x.value));
+    registros[mes] = registros[mes] || [];
 
-    if (escolhidos.length !== 3) {
-        msg.innerHTML = "⚠ Escolha exatamente 3 meses";
+    if (registros[mes].length >= 3) {
+        alert("Este mês já está cheio!");
         return;
     }
 
-    dados[cpf] = { nome, cpf, meses: escolhidos };
-    localStorage.setItem("feriasDashboard", JSON.stringify(dados));
+    registros[mes].push({ nome, cpf });
+    localStorage.setItem("painelEquipe", JSON.stringify(registros));
 
-    msg.innerHTML = "✔ Registrado com sucesso!";
-
-    atualizarDashboard();
-    montarMesesForm();
+    alert("Cadastro realizado!");
+    location.reload();
 }
 
-function loginAdm() {
-    const senha = document.getElementById("admSenha").value;
-    if (senha === SENHA_ADM) {
-        document.getElementById("admPanel").style.display = "block";
-        gerarTabelaADM();
+function login() {
+    const input = document.getElementById("senha").value;
+
+    if (input === senhaAdm) {
+        document.getElementById("adminArea").style.display = "block";
+        mostrarAdmin();
     } else {
-        alert("Senha incorreta!");
+        alert("Senha incorreta.");
     }
 }
 
-function gerarTabelaADM() {
-    let html = `<table><tr><th>Nome</th><th>CPF</th><th>Meses</th></tr>`;
-    for (let cpf in dados) {
-        html += `<tr>
-            <td>${dados[cpf].nome}</td>
-            <td>${cpf}</td>
-            <td>${dados[cpf].meses.map(x => meses[x]).join(', ')}</td>
-        </tr>`;
-    }
-    html += `</table>`;
+function mostrarAdmin() {
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
 
-    document.getElementById("tabelaADM").innerHTML = html;
-}
+    meses.forEach(m => {
+        lista.innerHTML += `<h3>${m}</h3>`;
 
-function resetarTudo() {
-    if (confirm("Tem certeza que deseja apagar TUDO?")) {
-        dados = {};
-        localStorage.setItem("feriasDashboard", JSON.stringify(dados));
-        atualizarDashboard();
-        montarMesesForm();
-        gerarTabelaADM();
-        alert("Dados resetados!");
-    }
-}
-
-function exportarCSV() {
-    let csv = "Nome,CPF,Mês1,Mês2,Mês3\n";
-
-    for (let cpf in dados) {
-        let d = dados[cpf];
-        csv += `${d.nome},${cpf},${meses[d.meses[0]]},${meses[d.meses[1]]},${meses[d.meses[2]]}\n`;
-    }
-
-    let blob = new Blob([csv], { type: "text/csv" });
-    let url = URL.createObjectURL(blob);
-
-    let a = document.createElement("a");
-    a.href = url;
-    a.download = "ferias_dashboard.csv";
-    a.click();
-}
-
-// Inicializar
-atualizarDashboard();
-montarMesesForm();
-
-</script>
-</body>
-</html>
-  .pref-badge.order{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#021224}
-  .months-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
-  @media(min-width:980px){ .months-grid{grid-template-columns:repeat(4,1fr)} }
-  .month-card{background:rgba(255,255,255,0.015);padding:10px;border-radius:10px;min-height:140px;display:flex;flex-direction:column}
-  .month-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .assign-list{display:flex;flex-direction:column;gap:8px;overflow:auto}
-  .assign-item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02)}
-  .thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.04)}
-  .assign-meta{display:flex;flex-direction:column}
-  .assign-meta .name{font-weight:700}
-  .assign-meta .small{font-size:12px;color:var(--muted)}
-  .full-note{color:var(--err);font-weight:800}
-  .muted{color:var(--muted);font-size:13px}
-  .msg{margin-top:10px;font-size:14px}
-  .admin-controls{display:flex;gap:8px;align-items:center}
-  .coll-list{max-height:260px;overflow:auto;margin-top:10px}
-  .coll-row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid rgba(255,255,255,0.02)}
-  .camera-modal{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999}
-  .camera-card{background:#071126;padding:12px;border-radius:12px;max-width:420px;width:95%}
-  video{width:100%;border-radius:8px;background:#000}
-  .small-note{font-size:12px;color:var(--muted);margin-top:6px}
-</style>
-</head>
-<body>
-  <div class="app">
-    <header>
-      <div>
-        <h1>Painel de Férias — Hospital Vila da Serra</h1>
-        <div class="subtitle">Use o celular: tire a foto na hora, escolha até <strong>3 meses</strong> em ordem. Meses lotados aparecem como <span style="color:var(--err)">LOTADO</span>.</div>
-      </div>
-      <div class="controls">
-        <input id="searchInput" class="input" placeholder="Buscar (só admin)" style="width:160px"/>
-        <button id="adminBtn" class="btn-ghost">Entrar ADM</button>
-        <button id="logoutBtn" class="btn-ghost" style="display:none">Sair</button>
-      </div>
-    </header>
-
-    <div class="layout">
-      <!-- LEFT: public form -->
-      <section class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <label for="nameInput">Nome completo <span style="color:var(--err)">*</span></label>
-          </div>
-          <div class="muted">Limite por mês: <strong id="limitDisplay">3</strong></div>
-        </div>
-        <input id="nameInput" class="input" placeholder="Ex: João da Silva" style="margin-top:6px"/>
-
-        <label style="margin-top:10px">E-mail (opcional)</label>
-        <input id="emailInput" class="input" placeholder="seu.email@exemplo.com" style="margin-top:6px"/>
-
-        <label style="margin-top:10px">CPF (opcional — evita duplicidade)</label>
-        <input id="cpfInput" class="input" placeholder="000.000.000-00" style="margin-top:6px"/>
-
-        <label style="margin-top:12px">Foto (tire na hora ou envie)</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <img id="photoPreview" src="" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:#021"/>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <button id="openCameraBtn" class="btn-ghost">Abrir Câmera</button>
-            <input id="photoFile" type="file" accept="image/*" style="display:none"/>
-            <div class="small-note">Foto ajuda a identificar rapidamente (recomendado).</div>
-          </div>
-        </div>
-
-        <label style="margin-top:12px">Escolha até <strong>3</strong> meses (toque para selecionar — ordem importa)</label>
-        <div id="monthsSelector" class="months-wrap"></div>
-
-        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-          <button id="submitBtn" class="btn-primary">Enviar preferência</button>
-          <button id="myStatusBtn" class="btn-ghost">Ver meu status</button>
-          <button id="clearSelectionBtn" class="btn-ghost">Limpar</button>
-        </div>
-
-        <div id="msgBox" class="msg"></div>
-        <div class="small-note" style="margin-top:8px">Se já cadastrado, o envio atualiza suas preferências. Exclusões/exports só por ADM.</div>
-      </section>
-
-      <!-- RIGHT: months + admin -->
-      <section class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div class="muted">Visualização por mês</div>
-            <div class="muted small-note">Veja quem já escolheu. Meses com <strong id="limitDisplay2">3</strong> aparecem como LOTADO.</div>
-          </div>
-          <div id="adminStatus" class="muted">Modo Público</div>
-        </div>
-
-        <div id="monthsGrid" class="months-grid"></div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-          <div class="muted">Lista completa</div>
-          <div class="admin-controls">
-            <label class="muted">Limite por mês:</label>
-            <input id="limitInput" type="number" min="1" max="12" value="3" class="input" style="width:80px"/>
-            <button id="exportBtn" class="btn-ghost" style="display:none">Exportar CSV</button>
-            <button id="resetBtn" class="btn-ghost" style="display:none">Resetar dados</button>
-          </div>
-        </div>
-
-        <div id="collList" class="coll-list"></div>
-      </section>
-    </div>
-  </div>
-
-  <!-- Camera modal -->
-  <div id="cameraModal" class="camera-modal" style="display:none">
-    <div class="camera-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <strong>Tirar foto</strong>
-        <button id="closeCamera" class="btn-ghost">Fechar</button>
-      </div>
-      <video id="cameraVideo" autoplay playsinline></video>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button id="captureBtn" class="btn-primary">Capturar</button>
-        <button id="switchBtn" class="btn-ghost">Alternar Câmera</button>
-      </div>
-      <div id="cameraMsg" class="small-note"></div>
-    </div>
-  </div>
-
-<script>
-/* App Profissional - single file
-  - ADM password: lig@457812#
-  - Photo capture using getUserMedia and file input fallback
-  - Name required; choose up to 3 months in order; months blocked when full
-  - Save in LocalStorage
-  - Admin-only: delete, export CSV, reset, change limit
-*/
-
-// Configuration
-const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-const STORAGE_KEY = "hvs_ferias_v4";
-const ADMIN_PASSWORD = "lig@457812#";
-let state = { collaborators: [], limit: 3, admin: false }; // collaborators: {id,name,email,cpf,prefs[],assigned,photoData,createdAt}
-
-// Helpers
-const $ = id => document.getElementById(id);
-const uid = (n=8)=> Math.random().toString(36).slice(2,2+n);
-const save = ()=> localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-const load = ()=> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) state = JSON.parse(raw);
-    if(!state.limit) state.limit = 3;
-    if(!Array.isArray(state.collaborators)) state.collaborators = [];
-  } catch(e){ state = { collaborators: [], limit:3, admin:false }; }
-};
-
-// Initialization
-load();
-renderAll();
-
-// ===== Months selector (order-preserving) =====
-let currentSelection = []; // month indexes in selected order
-
-function renderMonthSelector(){
-  const wrap = $("monthsSelector");
-  wrap.innerHTML = "";
-  const counts = countsByMonth();
-  for(let i=0;i<12;i++){
-    const chip = document.createElement("button");
-    chip.type="button";
-    chip.className = "month-chip";
-    if(counts[i] >= state.limit) chip.classList.add("full");
-    const pos = currentSelection.indexOf(i);
-    if(pos !== -1) chip.classList.add("selected");
-    chip.innerHTML = `<span class="name">${MONTHS[i]}</span>
-                      <span style="display:flex;align-items:center;gap:8px">
-                        <span class="meta">${counts[i]} / ${state.limit}</span>
-                        <span class="pref-badge ${pos!==-1?'order':''}">${pos!==-1?pos+1:'+'}</span>
-                      </span>`;
-    chip.addEventListener("click", ()=>{
-      // if currently not selected and month full, block
-      if(counts[i] >= state.limit && currentSelection.indexOf(i) === -1){
-        showMsg(`O mês ${MONTHS[i]} está LOTADO.`, true); return;
-      }
-      const p = currentSelection.indexOf(i);
-      if(p === -1){
-        if(currentSelection.length >= 3){ showMsg("Escolha no máximo 3 meses.", true); return; }
-        currentSelection.push(i);
-      } else {
-        currentSelection.splice(p,1);
-      }
-      renderMonthSelector();
+        (registros[m] || []).forEach((r, i) => {
+            lista.innerHTML += `
+                <p>${r.nome} — ${r.cpf}
+                    <button onclick="remover('${m}', ${i})">Excluir</button>
+                </p>
+            `;
+        });
     });
-    wrap.appendChild(chip);
-  }
 }
 
-function clearSelection(){ currentSelection = []; renderMonthSelector(); }
-
-// ===== Counts & assignment =====
-function countsByMonth(){
-  const counts = Array.from({length:12}, ()=>0);
-  state.collaborators.forEach(c=>{
-    if(typeof c.assigned === "number") counts[c.assigned]++;
-  });
-  return counts;
+function remover(mes, index) {
+    registros[mes].splice(index,1);
+    localStorage.setItem("painelEquipe", JSON.stringify(registros));
+    mostrarAdmin();
+    atualizarDashboard();
 }
 
-function assignFor(coll){
-  const counts = countsByMonth();
-  if(Array.isArray(coll.prefs)){
-    for(const p of coll.prefs){
-      if(counts[p] < state.limit){
-        coll.assigned = p; counts[p]++; return;
-      }
-    }
-  }
-  for(let m=0;m<12;m++){
-    if(counts[m] < state.limit){ coll.assigned = m; counts[m]++; return; }
-  }
-  coll.assigned = null;
-}
-
-function recalcAll(){
-  state.collaborators.forEach(c => c.assigned = null);
-  state.collaborators.forEach(c => assignFor(c));
-  save();
-}
-
-// ===== Render months grid and collaborator list =====
-function renderMonthsGrid(){
-  const grid = $("monthsGrid"); grid.innerHTML = "";
-  const counts = countsByMonth();
-  for(let m=0;m<12;m++){
-    const card = document.createElement("div"); card.className = "month-card";
-    const head = document.createElement("div"); head.className = "month-head";
-    head.innerHTML = `<strong>${MONTHS[m]}</strong><div class="muted">${counts[m]} / ${state.limit}</div>`;
-    card.appendChild(head);
-    const list = document.createElement("div"); list.className = "assign-list";
-    const assigned = state.collaborators.filter(c => c.assigned === m);
-    if(assigned.length === 0){
-      const none = document.createElement("div"); none.className = "muted"; none.style.padding="6px"; none.textContent = "— nenhum —";
-      list.appendChild(none);
-    } else {
-      assigned.forEach(c => {
-        const it = document.createElement("div"); it.className = "assign-item";
-        it.innerHTML = `<img src="${c.photoData || ''}" class="thumb" alt="" onerror="this.style.display='none'"/>
-                        <div class="assign-meta">
-                          <div class="name">${escape(c.name)}</div>
-                          <div class="small">${c.email?escape(c.email):''}${c.cpf?(' • '+escape(c.cpf)) : ''}</div>
-                        </div>
-                        <div class="small">${Array.isArray(c.prefs)?c.prefs.map(p=>MONTHS[p]).join(' • '):''}</div>`;
-        list.appendChild(it);
-      });
-    }
-    if(counts[m] >= state.limit){
-      const note = document.createElement("div"); note.className = "full-note"; note.style.marginTop="8px"; note.textContent = "LOTADO";
-      card.appendChild(list); card.appendChild(note);
-    } else {
-      card.appendChild(list);
-    }
-    grid.appendChild(card);
-  }
-}
-
-function renderCollList(filter=""){
-  const container = $("collList"); container.innerHTML = "";
-  const q = filter.trim().toLowerCase();
-  const arr = state.collaborators.filter(c => c.name.toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q) || (c.cpf||'').toLowerCase().includes(q));
-  if(arr.length === 0){
-    container.innerHTML = '<div class="muted">Nenhum colaborador.</div>'; return;
-  }
-  arr.forEach((c, idx) => {
-    const row = document.createElement("div"); row.className = "coll-row";
-    row.innerHTML = `<div style="display:flex;gap:10px;align-items:center">
-                       <img src="${c.photoData || ''}" class="thumb" alt="" onerror="this.style.display='none'"/>
-                       <div>
-                         <div style="font-weight:700">${idx+1}. ${escape(c.name)}</div>
-                         <div class="muted">${c.email?escape(c.email):''} ${c.cpf?(' • '+escape(c.cpf)):''}</div>
-                         <div class="muted small-note">Pref: ${(Array.isArray(c.prefs)?c.prefs.map(p=>MONTHS[p]).join(', '):'—')}</div>
-                       </div>
-                     </div>
-                     <div style="display:flex;align-items:center;gap:8px">
-                       <div class="muted">${c.assigned!==null?MONTHS[c.assigned]:'—'}</div>
-                     </div>`;
-    // admin actions
-    if(state.admin){
-      const btns = document.createElement("div"); btns.style.display="flex"; btns.style.gap="8px"; btns.style.alignItems="center";
-      const del = document.createElement("button"); del.className="btn-ghost"; del.textContent="Excluir";
-      del.addEventListener("click", ()=> {
-        if(!confirm(`Excluir ${c.name}?`)) return;
-        state.collaborators = state.collaborators.filter(x => x.id !== c.id);
-        recalcAll(); renderAll();
-        showMsg("Colaborador excluído.", false);
-      });
-      btns.appendChild(del);
-      row.appendChild(btns);
-    }
-    container.appendChild(row);
-  });
-}
-
-// ===== Submit / status logic =====
-function submitPreference(){
-  const name = ($("nameInput").value || "").trim();
-  const email = ($("emailInput").value || "").trim();
-  const cpf = ($("cpfInput").value || "").trim();
-  if(!name){ showMsg("O nome completo é obrigatório.", true); return; }
-  if(currentSelection.length === 0){ showMsg("Selecione ao menos 1 mês (máx 3).", true); return; }
-  if(currentSelection.length > 3){ showMsg("Selecione no máximo 3 meses.", true); return; }
-
-  // check selected months availability (if full and not assigned to this user)
-  const counts = countsByMonth();
-  // unique identifier: cpf if provided, else name+email
-  const identifier = cpf ? ("cpf:"+cpf) : ("name:"+name.toLowerCase()+"|email:"+email.toLowerCase());
-  // if cpf provided ensure no other user with same cpf (unless it's the same record)
-  if(cpf){
-    const other = state.collaborators.find(c => c.cpf && c.cpf === cpf);
-    if(other && !(other.name.toLowerCase() === name.toLowerCase() && (other.email||'').toLowerCase() === email.toLowerCase())){
-      // allow update if it's the same person, otherwise inform
-      // but permit updating that record instead
-      // we'll treat as update of existing person
-    }
-  }
-
-  // Verify selected months not full (unless the user already assigned to that month and is updating)
-  for(const m of currentSelection){
-    if(counts[m] >= state.limit){
-      // allow if user already assigned to that month
-      const already = state.collaborators.find(c => (cpf? c.cpf === cpf : (c.name.toLowerCase() === name.toLowerCase() && (c.email||'').toLowerCase() === email.toLowerCase())) && c.assigned === m);
-      if(!already){ showMsg(`O mês ${MONTHS[m]} está LOTADO. Remova-o da seleção.`, true); return; }
-    }
-  }
-
-  // find existing collaborator by cpf, else by name+email, else by name only
-  let coll = null;
-  if(cpf) coll = state.collaborators.find(c => c.cpf && c.cpf === cpf);
-  if(!coll && email) coll = state.collaborators.find(c => (c.email||'').toLowerCase() === email.toLowerCase());
-  if(!coll) coll = state.collaborators.find(c => c.name.toLowerCase() === name.toLowerCase());
-
-  if(!coll){
-    coll = { id: uid(), name, email, cpf, prefs: [], assigned: null, photoData: null, createdAt: Date.now() };
-    state.collaborators.push(coll);
-  } else {
-    coll.name = name; coll.email = email; coll.cpf = cpf || coll.cpf;
-  }
-
-  // attach photo if preview available
-  const preview = $("photoPreview").src || "";
-  if(preview && preview.indexOf("data:") === 0) coll.photoData = preview;
-
-  coll.prefs = [...currentSelection];
-  assignFor(coll);
-  save();
-  renderAll();
-  showMsg(`Preferência salva. Atribuição: ${coll.assigned!==null?MONTHS[coll.assigned]:'(nenhuma vaga no momento)'}`, false);
-  currentSelection = []; renderMonthSelector();
-}
-
-function viewMyStatus(){
-  const name = ($("nameInput").value || "").trim();
-  const email = ($("emailInput").value || "").trim();
-  if(!name){ showMsg("Digite seu nome para ver seu status.", true); return; }
-  const c = state.collaborators.find(x => x.name.toLowerCase() === name.toLowerCase() && (email ? (x.email||'').toLowerCase() === email.toLowerCase() : true));
-  if(!c){ showMsg("Não encontrado — você ainda não se cadastrou.", true); return; }
-  showMsg(`Nome: ${c.name}\nE-mail: ${c.email || '—'}\nPreferências: ${(Array.isArray(c.prefs)?c.prefs.map(p=>MONTHS[p]).join(', '):'—')}\nAtribuição: ${c.assigned!==null?MONTHS[c.assigned]:'(sem atribuição)'}`, false, 7000);
-}
-
-// ===== Admin functions =====
-function adminLogin(){
-  const pass = prompt("Senha de administrador:");
-  if(pass === null) return;
-  if(pass === ADMIN_PASSWORD){
-    state.admin = true; save(); renderAll(); showMsg("Modo administrador ativado.", false);
-  } else { alert("Senha incorreta."); }
-}
-function adminLogout(){ state.admin = false; save(); renderAll(); showMsg("Saída do modo admin.", false); }
-function resetAll(){ if(!confirm("Resetar todos os dados?")) return; state.collaborators = []; state.limit = 3; state.admin = false; save(); currentSelection = []; renderAll(); showMsg("Dados resetados.", false); }
-function exportCsv(){
-  const rows = [["Nome","Email","CPF","Preferências","Atribuição","FotoDataURI"]];
-  state.collaborators.forEach(c => {
-    rows.push([c.name||'', c.email||'', c.cpf||'', (Array.isArray(c.prefs)?c.prefs.map(p=>MONTHS[p]).join('; '):''), c.assigned!==null?MONTHS[c.assigned]:'', c.photoData||'']);
-  });
-  const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href = url; a.download = "escala_ferias.csv"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-}
-
-// ===== Camera capture (mobile friendly) =====
-let stream = null;
-let usingFront = false;
-async function openCamera(){
-  $("cameraModal").style.display = "flex";
-  const constraints = { video: { facingMode: usingFront ? "user" : "environment" }, audio: false };
-  try {
-    stream = await navigator.mediaDevices.getUserMedia(constraints);
-    $("cameraVideo").srcObject = stream;
-    $("cameraMsg").textContent = "";
-  } catch(e){
-    $("cameraMsg").textContent = "Não foi possível acessar a câmera. Permita acesso ou faça upload da imagem.";
-  }
-}
-function closeCamera(){
-  $("cameraModal").style.display = "none";
-  if(stream){
-    stream.getTracks().forEach(t => t.stop()); stream = null;
-  }
-}
-function switchCamera(){
-  usingFront = !usingFront;
-  if(stream){ stream.getTracks().forEach(t => t.stop()); stream = null; }
-  openCamera();
-}
-function capturePhoto(){
-  if(!stream){ $("cameraMsg").textContent = "Câmera não iniciada."; return; }
-  const video = $("cameraVideo");
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth || 1280;
-  canvas.height = video.videoHeight || 960;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  const data = canvas.toDataURL("image/jpeg", 0.85);
-  $("photoPreview").src = data;
-  closeCamera();
-}
-
-// File input fallback
-$("photoFile")?.addEventListener("change", function(e){
-  const f = e.target.files[0];
-  if(!f) return;
-  const reader = new FileReader();
-  reader.onload = function(){ $("photoPreview").src = reader.result; };
-  reader.readAsDataURL(f);
-});
-
-// ===== Utility & rendering glue =====
-function renderAll(filter=""){
-  $("limitDisplay").textContent = state.limit;
-  $("limitDisplay2").textContent = state.limit;
-  $("limitInput").value = state.limit;
-  renderMonthSelector();
-  recalcAll();
-  renderMonthsGrid();
-  renderCollList(filter);
-  // admin UI toggles
-  if(state.admin){
-    $("adminStatus").textContent = "Modo Admin";
-    $("exportBtn").style.display = "inline-block";
-    $("resetBtn").style.display = "inline-block";
-    $("logoutBtn").style.display = "inline-block";
-    $("adminBtn").style.display = "none";
-  } else {
-    $("adminStatus").textContent = "Modo Público";
-    $("exportBtn").style.display = "none";
-    $("resetBtn").style.display = "none";
-    $("logoutBtn").style.display = "none";
-    $("adminBtn").style.display = "inline-block";
-  }
-  save();
-}
-
-function showMsg(txt, isError=false, timeout=3000){
-  const box = $("msgBox");
-  box.style.color = isError ? "var(--err)" : "#b7f3ff";
-  box.textContent = txt;
-  if(timeout>0){ setTimeout(()=>{ if(box.textContent === txt) box.textContent = ""; }, timeout); }
-}
-
-function escape(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
-
-// ===== Events wiring =====
-$("submitBtn").addEventListener("click", submitPreference);
-$("myStatusBtn").addEventListener("click", viewMyStatus);
-$("clearSelectionBtn").addEventListener("click", ()=>{ clearSelection(); showMsg("Seleção limpa.", false); });
-
-$("adminBtn").addEventListener("click", adminLogin);
-$("logoutBtn").addEventListener("click", adminLogout);
-$("resetBtn").addEventListener("click", resetAll);
-$("exportBtn").addEventListener("click", exportCsv);
-
-$("limitInput").addEventListener("change", (e)=>{
-  const v = parseInt(e.target.value,10);
-  if(Number.isNaN(v) || v < 1){ e.target.value = state.limit; return; }
-  state.limit = v; recalcAll(); renderAll();
-});
-
-$("searchInput").addEventListener("input", (e)=> renderCollList(e.target.value));
-
-$("openCameraBtn").addEventListener("click", openCamera);
-$("closeCamera").addEventListener("click", closeCamera);
-$("captureBtn").addEventListener("click", capturePhoto);
-$("switchBtn").addEventListener("click", switchCamera);
-
-// allow tap photoPreview to open file picker
-$("photoPreview").addEventListener("click", ()=> $("photoFile").click());
-$("photoFile").addEventListener("click", (e)=> e.stopPropagation());
-
-// cleanup on unload
-window.addEventListener("beforeunload", ()=> save());
-
-// initial render
-renderAll();
-
+atualizarDashboard();
+carregarSelect();
 </script>
+
 </body>
 </html>
-
-
-
