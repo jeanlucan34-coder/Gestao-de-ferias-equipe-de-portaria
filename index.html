@@ -1,421 +1,151 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Painel de Férias — Cadastro e Admin</title>
-  <style>
-    :root{
-      --bg:#071026; --card:#081224; --muted:#9fb0c3; --accent:#06b6d4;
-      --ok:#16a34a; --warn:#f59e0b; --err:#ef4444;
-      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#071023 0%,#08111c 100%);color:#e6eef6;padding:18px}
-    .container{max-width:1180px;margin:0 auto}
-    header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
-    header h1{font-size:18px;margin:0}
-    .top-controls{display:flex;gap:8px;align-items:center}
-    button,select,input[type="text"],input[type="email"]{background:var(--card);border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:8px 10px;border-radius:8px}
-    button:hover{cursor:pointer;opacity:0.95}
-    .layout{display:grid;grid-template-columns:360px 1fr;gap:14px}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
-    .small{font-size:13px;color:var(--muted)}
-    .field{margin-bottom:8px}
-    .months-checkboxes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-    .months-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-    .month-card{padding:8px;border-radius:8px;background:rgba(255,255,255,0.01);min-height:120px;display:flex;flex-direction:column}
-    .badge{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.02);color:var(--muted)}
-    .assigned{display:flex;flex-direction:column;gap:6px;flex:1;overflow:auto;padding-right:6px}
-    .ass-item{padding:6px;border-radius:6px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#e6eef6}
-    .ass-item.over{border:1px dashed var(--err);background:rgba(239,68,68,0.04)}
-    .full{opacity:0.6;border:1px solid rgba(239,68,68,0.08)}
-    .muted-note{font-size:12px;color:var(--muted)}
-    @media (max-width:980px){ .layout{grid-template-columns:1fr} .months-grid{grid-template-columns:repeat(2,1fr)} .months-checkboxes{grid-template-columns:repeat(2,1fr)} }
-  </style>
+<meta charset="UTF-8">
+<title>Painel de Férias - HVS</title>
+<style>
+    body { font-family: Arial; margin: 20px; }
+    .full { color: red; font-weight: bold; }
+    .hidden { display: none; }
+    table { border-collapse: collapse; width: 500px; margin-top: 20px; }
+    table, th, td { border: 1px solid #333; padding: 8px; }
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div>
-        <h1>Painel de Férias — Cadastro de Preferências (até 3 meses)</h1>
-        <div class="small">Mostre aos colaboradores quais meses já estão cheios (máx <strong id="limitDisplay">3</strong>).</div>
-      </div>
-      <div class="top-controls">
-        <button id="adminBtn">Entrar Admin</button>
-        <button id="logoutBtn" style="display:none">Sair Admin</button>
-        <button id="exportCsvBtn">Exportar CSV</button>
-        <button id="resetBtn">Resetar dados</button>
-      </div>
-    </header>
 
-    <div class="layout">
-      <!-- Left: Form público -->
-      <section class="card">
-        <h3 style="margin-top:0">Cadastro de férias (colaborador)</h3>
-        <div class="small muted-note">Preencha seu nome e escolha até <strong>3 meses</strong> na ordem de preferência. Meses já com 3 colaboradores aparecem desabilitados.</div>
+<h2>Escolha de Férias - Equipe Portaria & Segurança</h2>
 
-        <div class="field">
-          <label class="small">Nome</label><br/>
-          <input id="nameInput" type="text" placeholder="Seu nome" />
-        </div>
+<div id="userSection">
 
-        <div class="field">
-          <label class="small">E-mail (opcional)</label><br/>
-          <input id="emailInput" type="email" placeholder="seu@exemplo.com" />
-        </div>
+    <label>Nome completo (obrigatório):</label><br>
+    <input type="text" id="nome" required style="width: 300px;"><br><br>
 
-        <div class="field">
-          <label class="small">Escolha até 3 meses (ordem importa)</label>
-          <div class="months-checkboxes" id="prefsBox"></div>
-          <div class="small muted-note">Marque em ordem: primeiro marcado será a preferência 1, depois 2, etc. Você pode desmarcar para alterar.</div>
-        </div>
+    <label>Escolha até 3 meses para preferência de férias:</label><br><br>
 
-        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
-          <button id="submitBtn">Enviar preferência</button>
-          <button id="myStatusBtn">Ver meu status</button>
-        </div>
+    <div id="mesesContainer"></div>
 
-        <hr style="margin:12px 0;border-color:rgba(255,255,255,0.03)"/>
+    <br>
+    <button onclick="salvarEscolha()">Enviar</button>
 
-        <div class="small">Observações:</div>
-        <ul class="small">
-          <li>O sistema tentará alocar você em uma das suas preferências (first-fit). Se tudo cheio, tentará próximo mês disponível.</li>
-          <li>Se já cadastrado, o envio atualiza suas preferências.</li>
-          <li>Exclusão só por Admin.</li>
-        </ul>
-      </section>
+    <p id="msg"></p>
 
-      <!-- Right: Meses e lista (visível a todos) -->
-      <section class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div class="small">Visualização por mês — meses cheios aparecem em vermelho.</div>
-          <div class="small">Total colaboradores: <strong id="totalCount">0</strong></div>
-        </div>
+</div>
 
-        <div class="months-grid" id="monthsGrid"></div>
+<hr>
 
-        <hr style="margin:10px 0;border-color:rgba(255,255,255,0.03)"/>
+<h3>Acesso do Administrador</h3>
 
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
-          <div>
-            <div class="small">Lista de colaboradores (apenas admin vê botões de exclusão)</div>
-          </div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <div class="small" id="adminStatus">Modo Público</div>
-            <div style="display:flex;gap:6px">
-              <label class="small">Limite por mês:</label>
-              <input id="limitInput" type="number" min="1" max="12" value="3" style="width:70px"/>
-            </div>
-          </div>
-        </div>
+<input type="password" id="senhaAdmin" placeholder="Senha do administrador">
+<button onclick="loginAdmin()">Entrar</button>
 
-        <div id="collList" style="margin-top:8px;max-height:260px;overflow:auto"></div>
-      </section>
-    </div>
-  </div>
+<div id="adminPanel" class="hidden">
+    <h3>Painel Administrativo</h3>
+
+    <button onclick="resetarDados()">Resetar Todos os Dados</button>
+    <button onclick="exportar()">Exportar Dados</button>
+
+    <h3>Escala Atual</h3>
+    <div id="tabelaAdmin"></div>
+</div>
 
 <script>
-/* Painel com:
- - cadastro público (até 3 meses de preferência por colaborador)
- - admin (login por senha) para excluir e alterar limite
- - meses mostram quando estão cheios (>=limit)
- - auto-allocation: tenta preferências na ordem; se indisponível, escolhe próximo mês com vaga
-*/
+const ADMIN_PASSWORD = "lig@457812#"; // SUA SENHA AQUI
+let dados = JSON.parse(localStorage.getItem("feriasDados") || "{}");
 
-// Config
-const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-const STORAGE_KEY = 'ferias_painel_v2';
-const DEFAULT_LIMIT = 3;
-const ADMIN_PASSWORD = 'admin123'; // altere aqui se quiser (note: autenticação local apenas)
+const meses = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+];
 
-// State
-let state = { collaborators: [], limit: DEFAULT_LIMIT, admin:false };
+function atualizarExibicaoMeses() {
+    let container = document.getElementById("mesesContainer");
+    container.innerHTML = "";
 
-// Helpers
-const uid =()=>Math.random().toString(36).slice(2,9);
-const el = id=>document.getElementById(id);
+    meses.forEach((mes, i) => {
+        let count = Object.values(dados).filter(v => v.includes(i)).length;
+        let cheio = count >= 3 ? " (LOTADO)" : "";
+        let disabled = count >= 3 ? "disabled" : "";
 
-// Load / Save
-function save(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-function load(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){ state = JSON.parse(raw); }
-    if(!state || !Array.isArray(state.collaborators)){ state = { collaborators: [], limit: DEFAULT_LIMIT, admin:false }; }
-  }catch(e){ state = { collaborators: [], limit: DEFAULT_LIMIT, admin:false }; }
-}
-function resetDefaults(){
-  state = { collaborators: [], limit: DEFAULT_LIMIT, admin:false };
-  // optional: seed 31 default collaborators (commented)
-  // for(let i=1;i<=31;i++) state.collaborators.push({id:uid(), name:`Colaborador ${i}`, email:'', prefs: [(i-1)%12], assigned: null, createdAt: Date.now()});
-  save(); renderAll();
-}
-
-// UI wiring
-const prefsBox = el('prefsBox');
-const monthsGrid = el('monthsGrid');
-const collList = el('collList');
-
-// Build month checkboxes (for input)
-function renderPrefCheckboxes(){
-  prefsBox.innerHTML = '';
-  for(let i=0;i<12;i++){
-    const wrap = document.createElement('label');
-    wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='6px';
-    const input = document.createElement('input');
-    input.type='checkbox'; input.value=i; input.dataset.month = i;
-    input.addEventListener('change', onPrefChange);
-    const span = document.createElement('span'); span.className='small'; span.textContent = MONTHS[i];
-    wrap.appendChild(input); wrap.appendChild(span);
-    prefsBox.appendChild(wrap);
-  }
-}
-function onPrefChange(e){
-  // enforce max 3 selected and visually disable full months
-  const checked = Array.from(prefsBox.querySelectorAll('input[type=checkbox]:checked'));
-  if(checked.length > 3){
-    // undo the last change
-    e.target.checked = false;
-    alert('Escolha no máximo 3 meses.');
-    return;
-  }
-}
-
-// Allocation logic
-function countsByMonth(){
-  const counts = Array.from({length:12}, ()=>0);
-  state.collaborators.forEach(c=>{
-    if(typeof c.assigned === 'number') counts[c.assigned]++;
-  });
-  return counts;
-}
-function markFullMonths(){
-  const counts = countsByMonth();
-  const inputs = prefsBox.querySelectorAll('input[type=checkbox]');
-  inputs.forEach(inp=>{
-    const m = parseInt(inp.value,10);
-    if(counts[m] >= state.limit){
-      inp.disabled = true;
-      inp.parentElement.classList.add('full');
-    } else {
-      inp.disabled = false;
-      inp.parentElement.classList.remove('full');
-    }
-  });
-}
-
-// Try to assign a collaborator based on their preferences (array of month indexes in order)
-function assignForCollaborator(coll){
-  const counts = countsByMonth();
-  // first try preferences in order
-  if(Array.isArray(coll.prefs) && coll.prefs.length){
-    for(const p of coll.prefs){
-      if(counts[p] < state.limit){
-        coll.assigned = p;
-        counts[p]++;
-        return;
-      }
-    }
-  }
-  // fallback: find first month with space
-  for(let m=0;m<12;m++){
-    if(counts[m] < state.limit){
-      coll.assigned = m;
-      counts[m]++;
-      return;
-    }
-  }
-  // no space anywhere -> keep unassigned (null)
-  coll.assigned = null;
-}
-
-// Recalculate assignments for all collaborators.
-// Policy: try to respect existing assigned unless recalculation requested; to keep simple we'll reassign everyone deterministically using their prefs in stored order
-function recalculateAll(){
-  // clear assignments
-  state.collaborators.forEach(c => c.assigned = null);
-  // iterate in stored order and assign
-  state.collaborators.forEach(c => assignForCollaborator(c));
-  save();
-}
-
-// Render months grid
-function renderMonths(){
-  monthsGrid.innerHTML = '';
-  const counts = countsByMonth();
-  for(let m=0;m<12;m++){
-    const card = document.createElement('div'); card.className='month-card';
-    const header = document.createElement('div'); header.style.display='flex'; header.style.justifyContent='space-between'; header.style.alignItems='center'; header.style.marginBottom='8px';
-    const title = document.createElement('strong'); title.textContent = MONTHS[m];
-    const badge = document.createElement('div'); badge.className='badge'; badge.textContent = `${counts[m]} / ${state.limit}`;
-    header.appendChild(title); header.appendChild(badge);
-    card.appendChild(header);
-
-    const assignedWrap = document.createElement('div'); assignedWrap.className='assigned';
-    state.collaborators.filter(c=>c.assigned===m).forEach(c=>{
-      const item = document.createElement('div'); item.className='ass-item';
-      item.innerHTML = `<span>${escapeHtml(c.name)}${c.email?` <small style="opacity:.7">(${escapeHtml(c.email)})</small>`:''}</span>
-                        <small style="margin-left:8px">${Array.isArray(c.prefs)?c.prefs.map(p=>MONTHS[p]).join(' • '):''}</small>`;
-      assignedWrap.appendChild(item);
+        container.innerHTML += `
+            <label class="${count>=3?'full':''}">
+                <input type="checkbox" value="${i}" class="mesCheck" ${disabled}>
+                ${mes}${cheio}
+            </label><br>
+        `;
     });
-    if(counts[m] >= state.limit) assignedWrap.classList.add('full');
-    card.appendChild(assignedWrap);
-    monthsGrid.appendChild(card);
-  }
 }
 
-// Render collaborators list (with delete if admin)
-function renderCollList(){
-  collList.innerHTML = '';
-  state.collaborators.forEach((c, idx) => {
-    const row = document.createElement('div');
-    row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center';
-    row.style.padding='6px 4px'; row.style.borderBottom='1px solid rgba(255,255,255,0.02)';
-    const left = document.createElement('div'); left.innerHTML = `<strong>${idx+1}. ${escapeHtml(c.name)}</strong><div class="small" style="opacity:.8">${c.email?escapeHtml(c.email):''} • Pref: ${(Array.isArray(c.prefs)?c.prefs.map(p=>MONTHS[p]).join(', '):'—')}</div>`;
-    const right = document.createElement('div');
-    if(typeof c.assigned === 'number') right.innerHTML = `<div class="small">Atribuído: <strong>${MONTHS[c.assigned]}</strong></div>`;
-    else right.innerHTML = `<div class="small" style="color:var(--warn)">Sem atribuição</div>`;
-
-    if(state.admin){
-      const del = document.createElement('button');
-      del.textContent = 'Excluir';
-      del.style.marginLeft='8px';
-      del.addEventListener('click', ()=> {
-        if(!confirm(`Excluir ${c.name}? Esta ação é irreversível.`)) return;
-        state.collaborators = state.collaborators.filter(x=>x.id!==c.id);
-        recalculateAll();
-        renderAll();
-      });
-      right.appendChild(del);
+function salvarEscolha() {
+    let nome = document.getElementById("nome").value.trim();
+    if (!nome) {
+        document.getElementById("msg").innerHTML = "⚠️ O nome é obrigatório!";
+        return;
     }
-    row.appendChild(left); row.appendChild(right);
-    collList.appendChild(row);
-  });
 
-  el('totalCount').textContent = state.collaborators.length;
-  el('limitDisplay').textContent = state.limit;
-  el('limitInput').value = state.limit;
+    let checks = [...document.querySelectorAll(".mesCheck:checked")].map(x => Number(x.value));
+
+    if (checks.length !== 3) {
+        document.getElementById("msg").innerHTML = "⚠️ Você deve escolher exatamente 3 meses.";
+        return;
+    }
+
+    dados[nome] = checks;
+    localStorage.setItem("feriasDados", JSON.stringify(dados));
+
+    document.getElementById("msg").innerHTML = "✅ Dados enviados com sucesso!";
+    atualizarExibicaoMeses();
 }
 
-// Utilities
-function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function loginAdmin() {
+    let senha = document.getElementById("senhaAdmin").value;
 
-// Submit by collaborator
-el('submitBtn').addEventListener('click', ()=>{
-  const name = el('nameInput').value.trim();
-  const email = el('emailInput').value.trim();
-  if(!name){ alert('Informe seu nome.'); return; }
-  // read selected months in the order they were checked (we'll capture by DOM order of checked inputs)
-  const checkedInputs = Array.from(prefsBox.querySelectorAll('input[type=checkbox]')).filter(i=>i.checked);
-  if(checkedInputs.length === 0){ alert('Selecione pelo menos 1 mês.'); return; }
-  if(checkedInputs.length > 3){ alert('Selecione no máximo 3 meses.'); return; }
-  const prefs = checkedInputs.map(i=>parseInt(i.value,10));
-
-  // find existing by exact name+email (simple)
-  let coll = state.collaborators.find(c => c.name.toLowerCase() === name.toLowerCase() && (c.email||'').toLowerCase() === email.toLowerCase());
-  if(!coll){
-    coll = { id: uid(), name, email, prefs: [], assigned: null, createdAt: Date.now() };
-    state.collaborators.push(coll);
-  }
-  coll.prefs = prefs;
-  // assign
-  assignForCollaborator(coll);
-  save();
-  renderAll();
-  alert(`Preferências enviadas. Atribuição: ${coll.assigned!==null?MONTHS[coll.assigned]:'(nenhuma disponível no momento)'}`);
-});
-
-// View my status: find by name/email
-el('myStatusBtn').addEventListener('click', ()=>{
-  const name = el('nameInput').value.trim();
-  const email = el('emailInput').value.trim();
-  if(!name){ alert('Digite seu nome para procurar seu status.'); return; }
-  const coll = state.collaborators.find(c => c.name.toLowerCase() === name.toLowerCase() && (email? (c.email||'').toLowerCase() === email.toLowerCase() : true));
-  if(!coll) { alert('Não encontrado. Você ainda não se cadastrou.'); return; }
-  alert(`Nome: ${coll.name}\nE-mail: ${coll.email||'—'}\nPreferências: ${(Array.isArray(coll.prefs)?coll.prefs.map(p=>MONTHS[p]).join(', '):'—')}\nAtribuição: ${coll.assigned!==null?MONTHS[coll.assigned]:'(sem atribuição)'}`);
-});
-
-// Admin login
-el('adminBtn').addEventListener('click', ()=>{
-  const pass = prompt('Senha de admin:');
-  if(pass === null) return;
-  if(pass === ADMIN_PASSWORD){
-    state.admin = true; save();
-    renderAll();
-    el('adminBtn').style.display='none'; el('logoutBtn').style.display='inline-block';
-    el('adminStatus').textContent = 'Modo Admin';
-    alert('Acesso de administrador ativado (local).');
-  } else {
-    alert('Senha incorreta.');
-  }
-});
-el('logoutBtn').addEventListener('click', ()=>{
-  state.admin = false; save();
-  renderAll();
-  el('adminBtn').style.display='inline-block'; el('logoutBtn').style.display='none';
-  el('adminStatus').textContent = 'Modo Público';
-});
-
-// Export CSV
-el('exportCsvBtn').addEventListener('click', ()=>{
-  const rows = [['Nome','Email','Preferências','Atribuído']];
-  state.collaborators.forEach(c=>{
-    rows.push([c.name || '', c.email || '', (Array.isArray(c.prefs)?c.prefs.map(p=>MONTHS[p]).join('; '):''), c.assigned!==null?MONTHS[c.assigned]:'']);
-  });
-  const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'escala_ferias.csv'; document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-});
-
-// Reset
-el('resetBtn').addEventListener('click', ()=>{
-  if(!confirm('Resetar todos os dados?')) return;
-  resetDefaults();
-  alert('Dados resetados.');
-});
-
-// Limit change (only admin can change)
-el('limitInput').addEventListener('change', ()=>{
-  const v = parseInt(el('limitInput').value,10);
-  if(Number.isNaN(v) || v < 1){ alert('Valor inválido'); el('limitInput').value = state.limit; return; }
-  state.limit = v;
-  // after changing limit, re-evaluate assignments: we will recalc to ensure fairness
-  recalculateAll();
-  save();
-  renderAll();
-});
-
-// Initialization & rendering
-function renderAll(){
-  renderPrefCheckboxes();
-  markFullMonths();
-  renderMonths();
-  renderCollList();
-  // admin UI
-  if(state.admin){
-    el('adminBtn').style.display='none'; el('logoutBtn').style.display='inline-block';
-    el('adminStatus').textContent = 'Modo Admin';
-  } else {
-    el('adminBtn').style.display='inline-block'; el('logoutBtn').style.display='none';
-    el('adminStatus').textContent = 'Modo Público';
-  }
+    if (senha === ADMIN_PASSWORD) {
+        document.getElementById("adminPanel").classList.remove("hidden");
+        gerarTabela();
+    } else {
+        alert("Senha incorreta!");
+    }
 }
 
-// On load: populate state if absent
-load();
-// If no collaborators, you may prefill with 31 names if desired — currently starts empty.
-if(!state.collaborators) state.collaborators = [];
-// ensure limit exists
-if(!state.limit) state.limit = DEFAULT_LIMIT;
+function gerarTabela() {
+    let tabela = `<table><tr><th>Colaborador</th><th>Meses Escolhidos</th></tr>`;
+    for (let nome in dados) {
+        let mesesEscolhidos = dados[nome].map(i => meses[i]).join(", ");
+        tabela += `<tr><td>${nome}</td><td>${mesesEscolhidos}</td></tr>`;
+    }
+    tabela += "</table>";
+    document.getElementById("tabelaAdmin").innerHTML = tabela;
+}
 
-recalculateAll();
-renderAll();
+function resetarDados() {
+    if (confirm("Tem certeza que deseja apagar tudo?")) {
+        dados = {};
+        localStorage.removeItem("feriasDados");
+        gerarTabela();
+        atualizarExibicaoMeses();
+        alert("Dados resetados!");
+    }
+}
+
+function exportar() {
+    let conteudo = "Nome,Mês 1,Mês 2,Mês 3\n";
+    for (let nome in dados) {
+        let linha = [nome, ...dados[nome].map(i => meses[i])].join(",");
+        conteudo += linha + "\n";
+    }
+
+    let blob = new Blob([conteudo], { type: "text/csv" });
+    let url = URL.createObjectURL(blob);
+
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "ferias.csv";
+    a.click();
+}
+
+atualizarExibicaoMeses();
 
 </script>
+
 </body>
 </html>
