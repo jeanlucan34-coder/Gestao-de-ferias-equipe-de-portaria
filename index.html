@@ -135,23 +135,8 @@
 
         function processSchedule() {
             schedule = {};
-            const monthCount = {};
-            
             employees.forEach(emp => {
-                for (let choice of emp.choices) {
-                    if (choice) {
-                        monthCount[choice] = (monthCount[choice] || 0);
-                        if (monthCount[choice] < 3 && !emp.assignedMonth) {
-                            emp.assignedMonth = choice;
-                            schedule[emp.cpf] = emp;
-                            monthCount[choice]++;
-                            break;
-                        }
-                    }
-                }
-                if (!emp.assignedMonth) {
-                    schedule[emp.cpf] = emp;
-                }
+                schedule[emp.cpf] = emp;
             });
         }
 
@@ -163,7 +148,7 @@
 
         function updateMonthSelects() {
             const monthCount = {};
-            Object.values(schedule).forEach(emp => {
+            employees.forEach(emp => {
                 if (emp.assignedMonth) {
                     monthCount[emp.assignedMonth] = (monthCount[emp.assignedMonth] || 0) + 1;
                 }
@@ -188,7 +173,7 @@
 
         function updateMonthOccupation() {
             const monthCount = {};
-            Object.values(schedule).forEach(emp => {
+            employees.forEach(emp => {
                 if (emp.assignedMonth) {
                     monthCount[emp.assignedMonth] = (monthCount[emp.assignedMonth] || 0) + 1;
                 }
@@ -227,9 +212,8 @@
             }
 
             const html = employees.map(emp => {
-                const assigned = schedule[emp.cpf];
-                const statusClass = assigned?.assignedMonth ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
-                const statusText = assigned?.assignedMonth || 'Aguardando';
+                const statusClass = emp.assignedMonth ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                const statusText = emp.assignedMonth || 'Aguardando';
                 
                 return `
                     <div class="border border-gray-200 rounded-lg p-3">
@@ -280,31 +264,17 @@
 
             showLoading(true);
 
-            // Calcular mês atribuído
-            const monthCount = {};
-            Object.values(schedule).forEach(emp => {
-                if (emp.assignedMonth) {
-                    monthCount[emp.assignedMonth] = (monthCount[emp.assignedMonth] || 0) + 1;
-                }
-            });
-
-            let assignedMonth = null;
-            for (let choice of [choice1, choice2, choice3]) {
-                if (choice && (monthCount[choice] || 0) < 3) {
-                    assignedMonth = choice;
-                    break;
-                }
-            }
-
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         action: 'add',
                         name: name,
                         cpf: cpf,
-                        choices: [choice1, choice2, choice3],
-                        assignedMonth: assignedMonth
+                        choices: [choice1, choice2, choice3]
                     })
                 });
 
@@ -339,9 +309,8 @@
             let csv = 'Nome,CPF,1ª Escolha,2ª Escolha,3ª Escolha,Mês Atribuído,Status\n';
             
             employees.forEach(emp => {
-                const assigned = schedule[emp.cpf];
-                const status = assigned?.assignedMonth ? 'Confirmado' : 'Aguardando';
-                csv += `${emp.name},${emp.cpf},${emp.choices[0] || '-'},${emp.choices[1] || '-'},${emp.choices[2] || '-'},${assigned?.assignedMonth || 'Não alocado'},${status}\n`;
+                const status = emp.assignedMonth ? 'Confirmado' : 'Aguardando';
+                csv += `${emp.name},${emp.cpf},${emp.choices[0] || '-'},${emp.choices[1] || '-'},${emp.choices[2] || '-'},${emp.assignedMonth || 'Não alocado'},${status}\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -368,6 +337,9 @@
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         action: 'reset',
                         password: password
