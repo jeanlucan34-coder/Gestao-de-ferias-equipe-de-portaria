@@ -4,187 +4,344 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Escala de Férias 2025</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <div id="root"></div>
-    
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+    <div id="app" class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="bg-white rounded-lg shadow-xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <h1 class="text-3xl font-bold text-gray-800">Escala de Férias 2025</h1>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="exportToCSV()" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                            📥 Exportar
+                        </button>
+                        <button onclick="resetData()" class="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                            🗑️ Resetar
+                        </button>
+                    </div>
+                </div>
 
-        const VacationScheduler = () => {
-          const [employees, setEmployees] = useState([]);
-          const [currentEmployee, setCurrentEmployee] = useState('');
-          const [currentCPF, setCurrentCPF] = useState('');
-          const [choices, setChoices] = useState(['', '', '']);
-          const [schedule, setSchedule] = useState({});
-          const [showSuccess, setShowSuccess] = useState(false);
-          const [error, setError] = useState('');
+                <div id="success-message" class="hidden mb-4 p-4 bg-green-100 border border-green-400 rounded-lg">
+                    <span class="text-green-800">✅ Férias registradas com sucesso!</span>
+                </div>
 
-          const months = [
-            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-          ];
+                <div id="error-message" class="hidden mb-4 p-4 bg-red-100 border border-red-400 rounded-lg">
+                    <span class="text-red-800" id="error-text"></span>
+                </div>
 
-          useEffect(() => {
-            loadData();
-          }, []);
+                <div id="loading-message" class="hidden mb-4 p-4 bg-blue-100 border border-blue-400 rounded-lg">
+                    <span class="text-blue-800">⏳ Carregando dados...</span>
+                </div>
 
-          const loadData = async () => {
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Seu Nome Completo</label>
+                        <input type="text" id="employee-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Digite seu nome">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Seu CPF</label>
+                        <input type="text" id="employee-cpf" maxlength="14" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="000.000.000-00">
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">1ª Opção de Mês</label>
+                            <select id="choice-1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">Selecione um mês</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">2ª Opção de Mês</label>
+                            <select id="choice-2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">Selecione um mês</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">3ª Opção de Mês</label>
+                            <select id="choice-3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">Selecione um mês</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="submitForm()" class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition font-medium">
+                        Registrar Minhas Férias
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg shadow-xl p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">📊 Ocupação dos Meses</h2>
+                    <div id="month-occupation" class="space-y-2"></div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-xl p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4" id="employee-count">👥 Colaboradores Registrados (0/31)</h2>
+                    <div id="employee-list" class="max-h-96 overflow-y-auto space-y-2">
+                        <p class="text-gray-500 text-center py-8">Nenhum colaborador registrado ainda</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycby85dFAq6HYnCuBOVC4ny1-Vkim8PQmtyJRAzuvgra3oht-pqKnJIJGuOWfyQ6U8SXk/exec';
+        const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        let employees = [];
+        let schedule = {};
+
+        // Formatar CPF
+        document.getElementById('employee-cpf').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                e.target.value = value;
+            }
+        });
+
+        // Carregar dados ao iniciar
+        window.addEventListener('load', loadData);
+
+        async function loadData() {
+            showLoading(true);
             try {
-              const [employeesData, scheduleData] = await Promise.all([
-                window.storage.get('vacation-employees', true),
-                window.storage.get('vacation-schedule', true)
-              ]);
-              
-              if (employeesData?.value) {
-                setEmployees(JSON.parse(employeesData.value));
-              }
-              if (scheduleData?.value) {
-                setSchedule(JSON.parse(scheduleData.value));
-              }
-            } catch (err) {
-              console.log('Iniciando dados vazios');
+                const response = await fetch(API_URL + '?action=get');
+                const data = await response.json();
+                
+                if (data.success) {
+                    employees = data.employees;
+                    processSchedule();
+                    updateUI();
+                }
+            } catch (error) {
+                showError('Erro ao carregar dados: ' + error.message);
             }
-          };
+            showLoading(false);
+        }
 
-          const saveData = async (newEmployees, newSchedule) => {
+        function processSchedule() {
+            schedule = {};
+            const monthCount = {};
+            
+            employees.forEach(emp => {
+                for (let choice of emp.choices) {
+                    if (choice) {
+                        monthCount[choice] = (monthCount[choice] || 0);
+                        if (monthCount[choice] < 3 && !emp.assignedMonth) {
+                            emp.assignedMonth = choice;
+                            schedule[emp.cpf] = emp;
+                            monthCount[choice]++;
+                            break;
+                        }
+                    }
+                }
+                if (!emp.assignedMonth) {
+                    schedule[emp.cpf] = emp;
+                }
+            });
+        }
+
+        function updateUI() {
+            updateMonthSelects();
+            updateMonthOccupation();
+            updateEmployeeList();
+        }
+
+        function updateMonthSelects() {
+            const monthCount = {};
+            Object.values(schedule).forEach(emp => {
+                if (emp.assignedMonth) {
+                    monthCount[emp.assignedMonth] = (monthCount[emp.assignedMonth] || 0) + 1;
+                }
+            });
+
+            ['choice-1', 'choice-2', 'choice-3'].forEach(id => {
+                const select = document.getElementById(id);
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Selecione um mês</option>';
+                
+                months.forEach(month => {
+                    const count = monthCount[month] || 0;
+                    const option = document.createElement('option');
+                    option.value = month;
+                    option.textContent = `${month} (${count}/3)`;
+                    select.appendChild(option);
+                });
+                
+                select.value = currentValue;
+            });
+        }
+
+        function updateMonthOccupation() {
+            const monthCount = {};
+            Object.values(schedule).forEach(emp => {
+                if (emp.assignedMonth) {
+                    monthCount[emp.assignedMonth] = (monthCount[emp.assignedMonth] || 0) + 1;
+                }
+            });
+
+            const html = months.map(month => {
+                const count = monthCount[month] || 0;
+                const percentage = (count / 3) * 100;
+                const isAvailable = count < 3;
+                const barColor = percentage === 100 ? 'bg-red-500' : percentage >= 66 ? 'bg-yellow-500' : 'bg-green-500';
+                
+                return `
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-sm">
+                            <span class="font-medium">${month}</span>
+                            <span class="${isAvailable ? 'text-green-600' : 'text-red-600'}">
+                                ${count}/3 ${isAvailable ? '✓' : '✗'}
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="h-2 rounded-full transition-all ${barColor}" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('month-occupation').innerHTML = html;
+        }
+
+        function updateEmployeeList() {
+            document.getElementById('employee-count').textContent = `👥 Colaboradores Registrados (${employees.length}/31)`;
+            
+            if (employees.length === 0) {
+                document.getElementById('employee-list').innerHTML = '<p class="text-gray-500 text-center py-8">Nenhum colaborador registrado ainda</p>';
+                return;
+            }
+
+            const html = employees.map(emp => {
+                const assigned = schedule[emp.cpf];
+                const statusClass = assigned?.assignedMonth ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                const statusText = assigned?.assignedMonth || 'Aguardando';
+                
+                return `
+                    <div class="border border-gray-200 rounded-lg p-3">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="font-medium text-gray-800">${emp.name}</span>
+                            <span class="px-2 py-1 ${statusClass} text-xs rounded-full">${statusText}</span>
+                        </div>
+                        <div class="text-xs text-gray-600">
+                            Escolhas: ${emp.choices.filter(c => c).join(', ') || 'Nenhuma'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('employee-list').innerHTML = html;
+        }
+
+        async function submitForm() {
+            hideMessages();
+            
+            const name = document.getElementById('employee-name').value.trim();
+            const cpf = document.getElementById('employee-cpf').value.trim();
+            const choice1 = document.getElementById('choice-1').value;
+            const choice2 = document.getElementById('choice-2').value;
+            const choice3 = document.getElementById('choice-3').value;
+
+            if (!name) {
+                showError('Por favor, digite seu nome');
+                return;
+            }
+
+            if (!cpf || cpf.replace(/\D/g, '').length !== 11) {
+                showError('CPF inválido! Digite os 11 dígitos do CPF.');
+                return;
+            }
+
+            const choices = [choice1, choice2, choice3].filter(c => c);
+            if (choices.length === 0) {
+                showError('Selecione pelo menos uma opção de mês');
+                return;
+            }
+
+            const uniqueChoices = new Set(choices);
+            if (uniqueChoices.size !== choices.length) {
+                showError('Você não pode selecionar o mesmo mês mais de uma vez');
+                return;
+            }
+
+            showLoading(true);
+
+            // Calcular mês atribuído
+            const monthCount = {};
+            Object.values(schedule).forEach(emp => {
+                if (emp.assignedMonth) {
+                    monthCount[emp.assignedMonth] = (monthCount[emp.assignedMonth] || 0) + 1;
+                }
+            });
+
+            let assignedMonth = null;
+            for (let choice of [choice1, choice2, choice3]) {
+                if (choice && (monthCount[choice] || 0) < 3) {
+                    assignedMonth = choice;
+                    break;
+                }
+            }
+
             try {
-              await Promise.all([
-                window.storage.set('vacation-employees', JSON.stringify(newEmployees), true),
-                window.storage.set('vacation-schedule', JSON.stringify(newSchedule), true)
-              ]);
-            } catch (err) {
-              setError('Erro ao salvar dados. Tente novamente.');
-            }
-          };
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'add',
+                        name: name,
+                        cpf: cpf,
+                        choices: [choice1, choice2, choice3],
+                        assignedMonth: assignedMonth
+                    })
+                });
 
-          const formatCPF = (value) => {
-            const numbers = value.replace(/\D/g, '');
-            if (numbers.length <= 11) {
-              return numbers
-                .replace(/(\d{3})(\d)/, '$1.$2')
-                .replace(/(\d{3})(\d)/, '$1.$2')
-                .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-            }
-            return value;
-          };
-
-          const validateCPF = (cpf) => {
-            const numbers = cpf.replace(/\D/g, '');
-            return numbers.length === 11;
-          };
-
-          const getMonthCount = (month) => {
-            return Object.values(schedule).filter(emp => emp.assignedMonth === month).length;
-          };
-
-          const canAssignMonth = (month) => {
-            return getMonthCount(month) < 3;
-          };
-
-          const assignVacations = (employeeData) => {
-            const newSchedule = { ...schedule };
-            
-            for (let choice of employeeData.choices) {
-              if (choice && canAssignMonth(choice)) {
-                newSchedule[employeeData.cpf] = {
-                  ...employeeData,
-                  assignedMonth: choice,
-                  timestamp: Date.now()
-                };
-                return newSchedule;
-              }
-            }
-            
-            newSchedule[employeeData.cpf] = {
-              ...employeeData,
-              assignedMonth: null,
-              timestamp: Date.now()
-            };
-            return newSchedule;
-          };
-
-          const handleSubmit = async () => {
-            setError('');
-
-            if (!currentEmployee.trim()) {
-              setError('Por favor, digite seu nome');
-              return;
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess();
+                    document.getElementById('employee-name').value = '';
+                    document.getElementById('employee-cpf').value = '';
+                    document.getElementById('choice-1').value = '';
+                    document.getElementById('choice-2').value = '';
+                    document.getElementById('choice-3').value = '';
+                    await loadData();
+                } else {
+                    showError(data.error || 'Erro ao registrar férias');
+                }
+            } catch (error) {
+                showError('Erro ao salvar: ' + error.message);
             }
 
-            if (!currentCPF.trim()) {
-              setError('Por favor, digite seu CPF');
-              return;
-            }
+            showLoading(false);
+        }
 
-            if (!validateCPF(currentCPF)) {
-              setError('CPF inválido! Digite os 11 dígitos do CPF.');
-              return;
-            }
-
-            const cpfNumbers = currentCPF.replace(/\D/g, '');
-
-            // Verifica se o CPF já foi usado
-            const alreadyFilled = employees.some(e => 
-              e.cpf.replace(/\D/g, '') === cpfNumbers
-            );
-            
-            if (alreadyFilled) {
-              setError('❌ Este CPF já foi utilizado! Cada colaborador pode preencher apenas uma vez.');
-              return;
-            }
-
-            const validChoices = choices.filter(c => c !== '');
-            if (validChoices.length === 0) {
-              setError('Selecione pelo menos uma opção de mês');
-              return;
-            }
-
-            const uniqueChoices = new Set(validChoices);
-            if (uniqueChoices.size !== validChoices.length) {
-              setError('Você não pode selecionar o mesmo mês mais de uma vez');
-              return;
-            }
-
-            const employeeData = {
-              name: currentEmployee.trim(),
-              cpf: currentCPF,
-              choices: choices,
-              timestamp: Date.now()
-            };
-
-            const newSchedule = assignVacations(employeeData);
-            const newEmployees = [...employees, employeeData];
-
-            await saveData(newEmployees, newSchedule);
-            setEmployees(newEmployees);
-            setSchedule(newSchedule);
-            setShowSuccess(true);
-            setCurrentEmployee('');
-            setCurrentCPF('');
-            setChoices(['', '', '']);
-            
-            setTimeout(() => setShowSuccess(false), 3000);
-          };
-
-          const exportToCSV = () => {
+        async function exportToCSV() {
             const password = prompt('Digite a senha de administrador para exportar:');
             
             if (password !== 'lig@457812#') {
-              alert('❌ Senha incorreta! Apenas administradores podem exportar os dados.');
-              return;
+                alert('❌ Senha incorreta! Apenas administradores podem exportar os dados.');
+                return;
             }
-            
+
             let csv = 'Nome,CPF,1ª Escolha,2ª Escolha,3ª Escolha,Mês Atribuído,Status\n';
             
             employees.forEach(emp => {
-              const assigned = schedule[emp.cpf];
-              const status = assigned?.assignedMonth ? 'Confirmado' : 'Aguardando';
-              csv += `${emp.name},${emp.cpf},${emp.choices[0] || '-'},${emp.choices[1] || '-'},${emp.choices[2] || '-'},${assigned?.assignedMonth || 'Não alocado'},${status}\n`;
+                const assigned = schedule[emp.cpf];
+                const status = assigned?.assignedMonth ? 'Confirmado' : 'Aguardando';
+                csv += `${emp.name},${emp.cpf},${emp.choices[0] || '-'},${emp.choices[1] || '-'},${emp.choices[2] || '-'},${assigned?.assignedMonth || 'Não alocado'},${status}\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -192,188 +349,70 @@
             link.href = URL.createObjectURL(blob);
             link.download = `escala-ferias-${new Date().toISOString().split('T')[0]}.csv`;
             link.click();
-          };
+        }
 
-          const resetData = async () => {
+        async function resetData() {
             const password = prompt('Digite a senha de administrador para resetar os dados:');
             
             if (password !== 'lig@457812#') {
-              alert('❌ Senha incorreta! Apenas administradores podem resetar os dados.');
-              return;
+                alert('❌ Senha incorreta! Apenas administradores podem resetar os dados.');
+                return;
             }
             
-            if (window.confirm('Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita.')) {
-              try {
-                await Promise.all([
-                  window.storage.delete('vacation-employees', true),
-                  window.storage.delete('vacation-schedule', true)
-                ]);
-                setEmployees([]);
-                setSchedule({});
-                setError('');
-                alert('✅ Dados resetados com sucesso!');
-              } catch (err) {
-                setError('Erro ao resetar dados');
-              }
+            if (!confirm('Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita.')) {
+                return;
             }
-          };
 
-          return React.createElement('div', { className: 'min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4' },
-            React.createElement('div', { className: 'max-w-6xl mx-auto' },
-              React.createElement('div', { className: 'bg-white rounded-lg shadow-xl p-6 mb-6' },
-                React.createElement('div', { className: 'flex items-center justify-between mb-6' },
-                  React.createElement('div', { className: 'flex items-center gap-3' },
-                    React.createElement('svg', { className: 'w-8 h-8 text-indigo-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
-                      React.createElement('rect', { x: '3', y: '4', width: '18', height: '18', rx: '2', ry: '2' }),
-                      React.createElement('line', { x1: '16', y1: '2', x2: '16', y2: '6' }),
-                      React.createElement('line', { x1: '8', y1: '2', x2: '8', y2: '6' }),
-                      React.createElement('line', { x1: '3', y1: '10', x2: '21', y2: '10' })
-                    ),
-                    React.createElement('h1', { className: 'text-3xl font-bold text-gray-800' }, 'Escala de Férias 2025')
-                  ),
-                  React.createElement('div', { className: 'flex gap-2' },
-                    React.createElement('button', {
-                      onClick: exportToCSV,
-                      className: 'flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition'
-                    }, '📥 Exportar'),
-                    React.createElement('button', {
-                      onClick: resetData,
-                      className: 'flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition'
-                    }, '🗑️ Resetar')
-                  )
-                ),
+            showLoading(true);
 
-                showSuccess && React.createElement('div', { className: 'mb-4 p-4 bg-green-100 border border-green-400 rounded-lg flex items-center gap-2' },
-                  React.createElement('span', { className: 'text-green-800' }, '✅ Férias registradas com sucesso!')
-                ),
-
-                error && React.createElement('div', { className: 'mb-4 p-4 bg-red-100 border border-red-400 rounded-lg flex items-center gap-2' },
-                  React.createElement('span', { className: 'text-red-800' }, error)
-                ),
-
-                React.createElement('div', { className: 'space-y-4' },
-                  React.createElement('div', null,
-                    React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-2' }, 'Seu Nome Completo'),
-                    React.createElement('input', {
-                      type: 'text',
-                      value: currentEmployee,
-                      onChange: (e) => setCurrentEmployee(e.target.value),
-                      className: 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
-                      placeholder: 'Digite seu nome'
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'reset',
+                        password: password
                     })
-                  ),
+                });
 
-                  React.createElement('div', null,
-                    React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-2' }, 'Seu CPF'),
-                    React.createElement('input', {
-                      type: 'text',
-                      value: currentCPF,
-                      onChange: (e) => setCurrentCPF(formatCPF(e.target.value)),
-                      maxLength: 14,
-                      className: 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
-                      placeholder: '000.000.000-00'
-                    })
-                  ),
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ Dados resetados com sucesso!');
+                    await loadData();
+                } else {
+                    alert('❌ Erro ao resetar dados');
+                }
+            } catch (error) {
+                alert('❌ Erro: ' + error.message);
+            }
 
-                  React.createElement('div', { className: 'grid md:grid-cols-3 gap-4' },
-                    [0, 1, 2].map((index) =>
-                      React.createElement('div', { key: index },
-                        React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-2' }, 
-                          `${index + 1}ª Opção de Mês`
-                        ),
-                        React.createElement('select', {
-                          value: choices[index],
-                          onChange: (e) => {
-                            const newChoices = [...choices];
-                            newChoices[index] = e.target.value;
-                            setChoices(newChoices);
-                          },
-                          className: 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
-                        },
-                          React.createElement('option', { value: '' }, 'Selecione um mês'),
-                          months.map((month) =>
-                            React.createElement('option', { key: month, value: month },
-                              `${month} (${getMonthCount(month)}/3)`
-                            )
-                          )
-                        )
-                      )
-                    )
-                  ),
+            showLoading(false);
+        }
 
-                  React.createElement('button', {
-                    onClick: handleSubmit,
-                    className: 'w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition font-medium'
-                  }, 'Registrar Minhas Férias')
-                )
-              ),
+        function showSuccess() {
+            document.getElementById('success-message').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('success-message').classList.add('hidden');
+            }, 3000);
+        }
 
-              React.createElement('div', { className: 'grid md:grid-cols-2 gap-6' },
-                React.createElement('div', { className: 'bg-white rounded-lg shadow-xl p-6' },
-                  React.createElement('h2', { className: 'text-xl font-bold text-gray-800 mb-4' }, '📊 Ocupação dos Meses'),
-                  React.createElement('div', { className: 'space-y-2' },
-                    months.map((month) => {
-                      const count = getMonthCount(month);
-                      const percentage = (count / 3) * 100;
-                      const isAvailable = count < 3;
-                      
-                      return React.createElement('div', { key: month, className: 'space-y-1' },
-                        React.createElement('div', { className: 'flex justify-between text-sm' },
-                          React.createElement('span', { className: 'font-medium' }, month),
-                          React.createElement('span', { className: isAvailable ? 'text-green-600' : 'text-red-600' },
-                            `${count}/3 ${isAvailable ? '✓' : '✗'}`
-                          )
-                        ),
-                        React.createElement('div', { className: 'w-full bg-gray-200 rounded-full h-2' },
-                          React.createElement('div', {
-                            className: `h-2 rounded-full transition-all ${
-                              percentage === 100 ? 'bg-red-500' :
-                              percentage >= 66 ? 'bg-yellow-500' : 'bg-green-500'
-                            }`,
-                            style: { width: `${percentage}%` }
-                          })
-                        )
-                      );
-                    })
-                  )
-                ),
+        function showError(message) {
+            document.getElementById('error-text').textContent = message;
+            document.getElementById('error-message').classList.remove('hidden');
+        }
 
-                React.createElement('div', { className: 'bg-white rounded-lg shadow-xl p-6' },
-                  React.createElement('h2', { className: 'text-xl font-bold text-gray-800 mb-4' },
-                    `👥 Colaboradores Registrados (${employees.length}/31)`
-                  ),
-                  React.createElement('div', { className: 'max-h-96 overflow-y-auto space-y-2' },
-                    employees.length === 0 ?
-                      React.createElement('p', { className: 'text-gray-500 text-center py-8' },
-                        'Nenhum colaborador registrado ainda'
-                      ) :
-                      employees.map((emp) => {
-                        const assigned = schedule[emp.name];
-                        return React.createElement('div', { key: emp.name, className: 'border border-gray-200 rounded-lg p-3' },
-                          React.createElement('div', { className: 'flex justify-between items-start mb-2' },
-                            React.createElement('span', { className: 'font-medium text-gray-800' }, emp.name),
-                            assigned?.assignedMonth ?
-                              React.createElement('span', { className: 'px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full' },
-                                assigned.assignedMonth
-                              ) :
-                              React.createElement('span', { className: 'px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full' },
-                                'Aguardando'
-                              )
-                          ),
-                          React.createElement('div', { className: 'text-xs text-gray-600' },
-                            `Escolhas: ${emp.choices.filter(c => c).join(', ') || 'Nenhuma'}`
-                          )
-                        );
-                      })
-                  )
-                )
-              )
-            )
-          );
-        };
+        function showLoading(show) {
+            if (show) {
+                document.getElementById('loading-message').classList.remove('hidden');
+            } else {
+                document.getElementById('loading-message').classList.add('hidden');
+            }
+        }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(VacationScheduler));
+        function hideMessages() {
+            document.getElementById('success-message').classList.add('hidden');
+            document.getElementById('error-message').classList.add('hidden');
+        }
     </script>
 </body>
 </html>
