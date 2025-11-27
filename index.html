@@ -18,6 +18,7 @@
         const VacationScheduler = () => {
           const [employees, setEmployees] = useState([]);
           const [currentEmployee, setCurrentEmployee] = useState('');
+          const [currentCPF, setCurrentCPF] = useState('');
           const [choices, setChoices] = useState(['', '', '']);
           const [schedule, setSchedule] = useState({});
           const [showSuccess, setShowSuccess] = useState(false);
@@ -61,6 +62,22 @@
             }
           };
 
+          const formatCPF = (value) => {
+            const numbers = value.replace(/\D/g, '');
+            if (numbers.length <= 11) {
+              return numbers
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            }
+            return value;
+          };
+
+          const validateCPF = (cpf) => {
+            const numbers = cpf.replace(/\D/g, '');
+            return numbers.length === 11;
+          };
+
           const getMonthCount = (month) => {
             return Object.values(schedule).filter(emp => emp.assignedMonth === month).length;
           };
@@ -74,7 +91,7 @@
             
             for (let choice of employeeData.choices) {
               if (choice && canAssignMonth(choice)) {
-                newSchedule[employeeData.name] = {
+                newSchedule[employeeData.cpf] = {
                   ...employeeData,
                   assignedMonth: choice,
                   timestamp: Date.now()
@@ -83,7 +100,7 @@
               }
             }
             
-            newSchedule[employeeData.name] = {
+            newSchedule[employeeData.cpf] = {
               ...employeeData,
               assignedMonth: null,
               timestamp: Date.now()
@@ -96,6 +113,28 @@
 
             if (!currentEmployee.trim()) {
               setError('Por favor, digite seu nome');
+              return;
+            }
+
+            if (!currentCPF.trim()) {
+              setError('Por favor, digite seu CPF');
+              return;
+            }
+
+            if (!validateCPF(currentCPF)) {
+              setError('CPF inválido! Digite os 11 dígitos do CPF.');
+              return;
+            }
+
+            const cpfNumbers = currentCPF.replace(/\D/g, '');
+
+            // Verifica se o CPF já foi usado
+            const alreadyFilled = employees.some(e => 
+              e.cpf.replace(/\D/g, '') === cpfNumbers
+            );
+            
+            if (alreadyFilled) {
+              setError('❌ Este CPF já foi utilizado! Cada colaborador pode preencher apenas uma vez.');
               return;
             }
 
@@ -113,33 +152,39 @@
 
             const employeeData = {
               name: currentEmployee.trim(),
+              cpf: currentCPF,
               choices: choices,
               timestamp: Date.now()
             };
 
             const newSchedule = assignVacations(employeeData);
-            const existingIndex = employees.findIndex(e => e.name === employeeData.name);
-            const newEmployees = existingIndex >= 0
-              ? employees.map((e, i) => i === existingIndex ? employeeData : e)
-              : [...employees, employeeData];
+            const newEmployees = [...employees, employeeData];
 
             await saveData(newEmployees, newSchedule);
             setEmployees(newEmployees);
             setSchedule(newSchedule);
             setShowSuccess(true);
             setCurrentEmployee('');
+            setCurrentCPF('');
             setChoices(['', '', '']);
             
             setTimeout(() => setShowSuccess(false), 3000);
           };
 
           const exportToCSV = () => {
-            let csv = 'Nome,1ª Escolha,2ª Escolha,3ª Escolha,Mês Atribuído,Status\n';
+            const password = prompt('Digite a senha de administrador para exportar:');
+            
+            if (password !== 'lig@457812#') {
+              alert('❌ Senha incorreta! Apenas administradores podem exportar os dados.');
+              return;
+            }
+            
+            let csv = 'Nome,CPF,1ª Escolha,2ª Escolha,3ª Escolha,Mês Atribuído,Status\n';
             
             employees.forEach(emp => {
-              const assigned = schedule[emp.name];
+              const assigned = schedule[emp.cpf];
               const status = assigned?.assignedMonth ? 'Confirmado' : 'Aguardando';
-              csv += `${emp.name},${emp.choices[0] || '-'},${emp.choices[1] || '-'},${emp.choices[2] || '-'},${assigned?.assignedMonth || 'Não alocado'},${status}\n`;
+              csv += `${emp.name},${emp.cpf},${emp.choices[0] || '-'},${emp.choices[1] || '-'},${emp.choices[2] || '-'},${assigned?.assignedMonth || 'Não alocado'},${status}\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -150,6 +195,13 @@
           };
 
           const resetData = async () => {
+            const password = prompt('Digite a senha de administrador para resetar os dados:');
+            
+            if (password !== 'lig@457812#') {
+              alert('❌ Senha incorreta! Apenas administradores podem resetar os dados.');
+              return;
+            }
+            
             if (window.confirm('Tem certeza que deseja resetar todos os dados? Esta ação não pode ser desfeita.')) {
               try {
                 await Promise.all([
@@ -159,6 +211,7 @@
                 setEmployees([]);
                 setSchedule({});
                 setError('');
+                alert('✅ Dados resetados com sucesso!');
               } catch (err) {
                 setError('Erro ao resetar dados');
               }
@@ -207,6 +260,18 @@
                       onChange: (e) => setCurrentEmployee(e.target.value),
                       className: 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
                       placeholder: 'Digite seu nome'
+                    })
+                  ),
+
+                  React.createElement('div', null,
+                    React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-2' }, 'Seu CPF'),
+                    React.createElement('input', {
+                      type: 'text',
+                      value: currentCPF,
+                      onChange: (e) => setCurrentCPF(formatCPF(e.target.value)),
+                      maxLength: 14,
+                      className: 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
+                      placeholder: '000.000.000-00'
                     })
                   ),
 
